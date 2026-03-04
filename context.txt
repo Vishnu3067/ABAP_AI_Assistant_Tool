@@ -1,0 +1,208 @@
+## ABAP AI Assistant Tool (ADC) — Project Context
+
+### OVERVIEW
+
+The ABAP AI Assistant Tool (ADC) is a standalone web application built with FastAPI and HTML/CSS/JS.
+It is designed for SAP ABAP developers to analyse, compare, review, and document ABAP artifacts
+directly through a browser — without needing to open Eclipse, SE80, or any SAP GUI.
+
+The tool connects to multiple SAP systems (D59, K59, S59, L59) using Windows SSPI authentication
+and leverages an Azure-hosted AI API to provide intelligent analysis and suggestions.
+
+All custom ABAP objects in this SAP landscape follow the naming convention: /SHL/
+
+Valid SAP system IDs supported across all tools:
+  - D59 — Development system
+  - K59 — Quality / Test system
+  - S59 — Sandbox system
+  - L59 — Business system
+
+---
+
+## FEATURES
+
+---
+
+### 1. Retro Fit Tool
+**Purpose:** Compare an ABAP artifact side-by-side across two SAP systems to identify what has changed.
+
+**Supported artifact types:**
+  - Class
+  - Function Module (requires function group name in addition to FM name)
+  - Report / Program
+  - CDS View
+
+**How it works:**
+  - The developer provides the artifact name, type, source system, and destination system.
+  - The tool fetches the source code from both systems via SAP ADT REST APIs.
+  - The two code versions are displayed side by side with line-by-line diff highlighting:
+      - Green  = line added in destination but not in source
+      - Red    = line removed from source, not present in destination
+      - Yellow = line changed between the two versions
+      - White  = identical line (no change)
+  - Below the code blocks, an AI-powered analysis panel provides a structured diff report:
+      - Summary: one-line verdict (identical / N differences found)
+      - Structural Differences: added/removed methods, fields, parameters, logic blocks
+      - Signature / Annotation Differences: changed types, return types, annotations
+      - Logic / Condition Differences: modified WHERE clauses, IF conditions, loops
+      - Other Differences: anything else that changed
+      - Recommendation: short action item for the developer
+
+**Key rules:**
+  - Source and destination systems must be different.
+  - For Function Modules, the function group name is mandatory.
+  - Only D59, K59, S59, and L59 are valid system IDs.
+
+---
+
+### 2. Code Review / Optimization Tool
+**Purpose:** Automatically review any ABAP artifact for coding standard violations and performance issues.
+
+**What it checks:**
+  a) Mod Log Header compliance
+     - Every ABAP object must have a Mod Log at the very top.
+     - Template to generate if missing:
+         *----------------------------------------------------------------------*
+         * OBJECT NAME   :
+         * AUTHOR        : Developer Name ( ALIAS ID )
+         * CREATION DATE :
+         * WRICEF_ID     :
+         * REQ ID        :
+         * PURPOSE       : Description of the Requirement
+         *----------------------------------------------------------------------*
+         * Change History
+         *----------------------------------------------------------------------*
+         * Changed Date  :
+         * Changed By    :
+         * Purpose       :
+         * Change Ticket :
+         *----------------------------------------------------------------------*
+
+  b) No direct table access in SELECT statements
+     - All SELECT queries must go through a CDS View, never directly against a database table.
+     - When a direct SELECT is found, the tool flags it and suggests a CDS View alternative.
+
+  c) Performance issues
+     - Slow or inefficient SELECT statements
+     - Unnecessary full table scans or missing index usage
+     - Non-optimized nested loops or redundant reads
+
+**Output format:**
+  - List of issues found, grouped by category (Mod Log / Direct SELECT / Performance)
+  - For each issue: line reference, description, and suggested fix
+  - Overall rating: Clean / Minor Issues / Major Issues
+
+---
+
+### 3. TS Updation Tool
+**Purpose:** Generate and keep Technical Specifications (TS) up-to-date by analysing the latest code of an ABAP artifact.
+
+**How it works:**
+  - The developer provides an artifact name and type.
+  - The tool fetches the current source code from the SAP system.
+  - The AI generates a full Technical Specification document based on the live code.
+  - If an existing TS text is pasted in, the tool compares and updates only the changed sections.
+
+**TS document sections:**
+  - Object Overview (name, type, package, purpose)
+  - Input / Output parameters
+  - Business logic description (step by step, plain language)
+  - Database tables / CDS views accessed
+  - Exception / error handling
+  - Change history summary
+
+---
+
+### 4. Reusable Artifacts Tool
+**Purpose:** Help developers discover pre-approved, reusable ABAP artifacts from the organisation's internal catalog before writing new code.
+
+**How it works:**
+  - The developer describes what they need in plain language (e.g., "send an email with attachment").
+  - The tool searches the catalog of approved Classes and Function Modules using semantic similarity.
+  - Matching artifacts are returned with a brief description and usage guidance.
+
+**Catalog contains:**
+  - Reusable ABAP Classes (/SHL/ namespace)
+  - Reusable Function Modules (/SHL/ namespace)
+  - Each entry has: artifact name, type, description, example usage
+
+**Output:**
+  - List of relevant artifacts with name, type, and a plain-language explanation of what each one does.
+  - Guidance on how to call the artifact in ABAP code.
+
+---
+
+### 5. Analysis / Summarization Tool
+**Purpose:** Explain any ABAP artifact in plain, easy-to-understand language — useful for documentation, onboarding, and impact understanding.
+
+**How it works:**
+  - The developer provides an artifact name and type.
+  - The tool fetches the source code and passes it to the AI.
+  - A clear summary is generated covering:
+      - Overall purpose and business context
+      - Step-by-step data flow
+      - Key methods / subroutines and what they do
+      - Database tables / CDS views involved
+      - External dependencies (other FMs, classes, BAPIs called)
+
+**Supports all artifact types:**
+  Class, Function Module, Report / Program, CDS View, Function Group, Include, Interface
+
+---
+
+### 6. Impact Analysis Tool (Where-Used)
+**Purpose:** Before modifying an ABAP artifact, identify all objects that depend on it so the developer knows what might break.
+
+**How it works:**
+  - The developer provides the artifact name and its SAP object type code.
+  - Common type codes: CLAS (Class), FUNC (Function Module), TABL (Table), PROG (Program), INTF (Interface)
+  - The tool queries the SAP where-used list and returns all dependent objects.
+  - The AI then interprets the results and produces a risk assessment.
+
+**Output:**
+  - Total number of usages found
+  - List grouped by object type (e.g., 5 Programs, 2 Classes, 1 Function Group)
+  - Each entry: object type, object name, navigable reference
+  - Risk assessment: Low / Medium / High based on number and criticality of dependents
+  - Recommendation: which objects to regression-test before releasing the change
+
+---
+
+### 7. TR Sequencing Analyser
+**Purpose:** Verify that all Transport Request (TR) dependencies have been released to the target system before the developer releases their own TR — preventing broken transports in Quality or Production.
+
+**Typical scenario:**
+  A developer's class uses a CDS view that belongs to a different TR owned by another developer.
+  Before releasing their TR to Quality, they need to confirm the CDS view's TR was already released.
+
+**How it works:**
+  - The developer provides their TR number and the destination system ID.
+  - The tool analyses all objects in the TR, finds their dependencies (e.g., CDS views in SELECTs),
+    and checks whether each dependency has already been transported to the target system.
+
+**Valid destination systems:** D59, K59, S59, L59
+  - If any other system ID is provided, the user is asked to re-enter.
+
+**Output:**
+  - TR Summary: TR number, target system, total objects
+  - Dependency Status Table for each dependent object:
+      - ✅ Released  — already in the target system, no blocking issue
+      - ⏳ Pending   — TR exists but not yet released to the target system
+      - ❌ Missing   — dependency not found in the target system at all
+  - Final Verdict:
+      - "Safe to release" if all dependencies are ✅ Released
+      - "Do NOT release — unblock these TRs first: [list]" if any are ⏳ or ❌
+
+---
+
+## AI BEHAVIOUR RULES (for all features)
+
+1. Always fetch live code from the SAP system before analysing. Never guess or fabricate ABAP code.
+2. Reply in simple, clear language. Avoid excessive jargon.
+3. Use structured output: headings, bullet points, and code blocks where appropriate.
+4. Be proactive — if a Mod Log is missing or a direct table SELECT is spotted while doing another task, mention it.
+5. Be concise — give clear answers without unnecessary filler.
+6. All generated code and suggestions are returned in the UI only. The developer copies and applies them manually. Never attempt to write back to the SAP system.
+7. Custom object naming convention in this landscape: all custom objects start with /SHL/
+8. Present tabular data in a clean structured format (JSON or table as appropriate).
+9. For each AI analysis, always include a Recommendation section at the end.

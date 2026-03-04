@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+openai
+requests
+requests-negotiate-sspi
+truststore
+python-dotenv
