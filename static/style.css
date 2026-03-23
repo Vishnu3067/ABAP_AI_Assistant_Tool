@@ -69,17 +69,9 @@ body {
 }
 
 .navbar-logo {
-  width: 36px;
-  height: 36px;
-  background: var(--nav-text);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 900;
-  color: var(--nav-bg);
-  letter-spacing: -1px;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
@@ -581,6 +573,96 @@ body {
 /* ============================================================
    LOADING STATE
    ============================================================ */
+/* ============================================================
+   ERROR TOAST
+   ============================================================ */
+.error-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 320px;
+  max-width: 480px;
+  background: #fff;
+  border: 1.5px solid #e53e3e;
+  border-left: 5px solid #e53e3e;
+  border-radius: 10px;
+  padding: 16px 14px 16px 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  animation: toastSlideIn 0.25s ease;
+}
+
+.error-toast.hidden { display: none; }
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.error-toast-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.error-toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.error-toast-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #c0392b;
+  margin-bottom: 4px;
+}
+
+.error-toast-message {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.error-toast-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.error-toast-close:hover { color: #333; }
+
+/* AI-generated tables */
+.ai-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.ai-table th {
+  background: #1a1a2e;
+  color: #fff;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+}
+.ai-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #e0e0e0;
+  vertical-align: top;
+}
+.ai-table tr:nth-child(even) td { background: #f9f9f9; }
+.ai-table tr:hover td { background: #f0f4ff; }
+
 .loading-overlay {
   position: fixed;
   inset: 0;
@@ -850,6 +932,51 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* ================================================================
+   REUSABLE ARTIFACTS VIEW
+   ================================================================ */
+.reusable-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.reusable-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.reusable-view-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.reusable-view-title-row h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.reusable-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 20px 28px;
+  background: #f7f8fc;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .ts-view-header {
@@ -1491,6 +1618,71 @@ body {
 /* ============================================================
    UTILITIES
    ============================================================ */
+
+/* ----------------------------------------------------------------
+   Fetched-artifacts badge (auto-action indicator in chat)
+   ---------------------------------------------------------------- */
+.fetched-badge {
+  margin: 6px 0 10px 48px;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  background: #f1faf2;
+  font-size: 12.5px;
+  overflow: hidden;
+  max-width: 640px;
+}
+
+.fetched-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  user-select: none;
+  background: #e8f5e9;
+  border-radius: 8px 8px 0 0;
+}
+
+.fetched-badge .fetched-body.collapsed { display: none; }
+
+.fetched-icon  { font-size: 14px; }
+.fetched-title { font-weight: 600; color: #2e7d32; flex: 1; }
+.fetched-chevron { font-size: 11px; color: #555; margin-left: auto; }
+
+.fetched-pills { display: flex; gap: 5px; }
+.fetch-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.fetch-pill.ok   { background: #388e3c; color: #fff; }
+.fetch-pill.skip { background: #f57c00; color: #fff; }
+.fetch-pill.err  { background: #c62828; color: #fff; }
+
+.fetched-body { padding: 8px 12px; }
+
+.fetched-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.fetched-table th {
+  text-align: left;
+  padding: 3px 8px;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #c8e6c9;
+}
+.fetched-table td {
+  padding: 3px 8px;
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+.fetched-table tr:hover td { background: #e8f5e9; }
+.fetch-status { color: #388e3c; font-size: 11px; }
+
 .hidden { display: none !important; }
 
 .spacer { flex: 1; }

@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  const { validSystems, artifactTypes, codeReviewArtifactTypes, trValidSystems, analysisArtifactTypes } = window.APP_CONFIG;
+  const { validSystems, artifactTypes, codeReviewArtifactTypes, trValidSystems, analysisArtifactTypes, impactArtifactTypes } = window.APP_CONFIG;
 
   // ----------------------------------------------------------------
   // DOM references
@@ -15,12 +15,39 @@
   const compareView       = document.getElementById('compareView');
   const loadingOverlay    = document.getElementById('loadingOverlay');
 
+  // ----------------------------------------------------------------
+  // Global error toast — call showErrorToast(title, message) from anywhere
+  // ----------------------------------------------------------------
+  const errorToast        = document.getElementById('errorToast');
+  const errorToastTitle   = document.getElementById('errorToastTitle');
+  const errorToastMessage = document.getElementById('errorToastMessage');
+  const errorToastClose   = document.getElementById('errorToastClose');
+  let   errorToastTimer   = null;
+
+  function showErrorToast(title, message) {
+    errorToastTitle.textContent   = title;
+    errorToastMessage.textContent = message;
+    errorToast.classList.remove('hidden');
+    // Auto-dismiss after 12 seconds
+    clearTimeout(errorToastTimer);
+    errorToastTimer = setTimeout(hideErrorToast, 12000);
+  }
+
+  function hideErrorToast() {
+    errorToast.classList.add('hidden');
+    clearTimeout(errorToastTimer);
+  }
+
+  errorToastClose.addEventListener('click', hideErrorToast);
+
   // Sidebar
   const btnRetrofit       = document.getElementById('btn-retrofit');
   const btnCodeReview     = document.getElementById('btn-code-review');
   const btnTrSequencing   = document.getElementById('btn-tr-sequencing');
   const btnTs             = document.getElementById('btn-ts');
   const btnAnalysis       = document.getElementById('btn-analysis');
+  const btnReusable       = document.getElementById('btn-reusable');
+  const btnImpact         = document.getElementById('btn-impact');
   const sidebarBtns       = document.querySelectorAll('.sidebar-btn:not(.disabled)');
 
   // Retrofit modal
@@ -96,6 +123,35 @@
   const tsBody            = document.getElementById('tsBody');
   const tsNewBtn          = document.getElementById('tsNewBtn');
   const tsCopyAllBtn      = document.getElementById('tsCopyAllBtn');
+
+  // Reusable Artifacts modal + view
+  const reusableModal     = document.getElementById('reusableModal');
+  const reusableQuestion  = document.getElementById('reusableQuestion');
+  const reusableError     = document.getElementById('reusableError');
+  const reusableSubmitBtn = document.getElementById('reusableSubmitBtn');
+  const reusableCancelBtn = document.getElementById('reusableCancelBtn');
+  const reusableView      = document.getElementById('reusableView');
+  const reusableViewTitle = document.getElementById('reusableViewTitle');
+  const reusableViewMeta  = document.getElementById('reusableViewMeta');
+  const reusableBody      = document.getElementById('reusableBody');
+  const reusableNewBtn    = document.getElementById('reusableNewBtn');
+
+  // Impact Analysis modal + view
+  const impactModal          = document.getElementById('impactModal');
+  const impactArtifactNameEl = document.getElementById('impactArtifactName');
+  const impactArtifactTypeEl = document.getElementById('impactArtifactType');
+  const impactFgGroup        = document.getElementById('impactFgGroup');
+  const impactFunctionGroupEl = document.getElementById('impactFunctionGroup');
+  const impactSystemEl       = document.getElementById('impactSystem');
+  const impactPlannedChangeEl = document.getElementById('impactPlannedChange');
+  const impactError          = document.getElementById('impactError');
+  const impactSubmitBtn      = document.getElementById('impactSubmitBtn');
+  const impactCancelBtn      = document.getElementById('impactCancelBtn');
+  const impactView           = document.getElementById('impactView');
+  const impactViewTitle      = document.getElementById('impactViewTitle');
+  const impactViewMeta       = document.getElementById('impactViewMeta');
+  const impactBody           = document.getElementById('impactBody');
+  const impactNewBtn         = document.getElementById('impactNewBtn');
 
   // Analysis / Summarization modal
   const analysisModal           = document.getElementById('analysisModal');
@@ -178,6 +234,14 @@
     analysisSystemEl.appendChild(new Option(systemDescriptions[s] || s, s));
   });
 
+  // Populate Impact Analysis artifact type and system dropdowns
+  (impactArtifactTypes || []).forEach(t => {
+    impactArtifactTypeEl.appendChild(new Option(t, t));
+  });
+  validSystems.forEach(s => {
+    impactSystemEl.appendChild(new Option(systemDescriptions[s] || s, s));
+  });
+
   // ----------------------------------------------------------------
   // Show/hide Function Group for Retrofit
   artifactTypeEl.addEventListener('change', () => {
@@ -218,12 +282,22 @@
       analysisFgGroup.classList.add('hidden');
       analysisFunctionGroupEl.value = '';
     }
-    // For Transaction(TCode) the artifact name IS the TCode, so hide the optional TCode field
+    // TCode Context field is only relevant when artifact type is Transaction (TCode)
     if (type === 'Transaction (TCode)') {
+      analysisTcodeGroup.classList.remove('hidden');
+    } else {
       analysisTcodeGroup.classList.add('hidden');
       analysisTcodeEl.value = '';
+    }
+  });
+
+  // Show/hide Function Group for Impact Analysis
+  impactArtifactTypeEl.addEventListener('change', () => {
+    if (impactArtifactTypeEl.value === 'Function Module') {
+      impactFgGroup.classList.remove('hidden');
     } else {
-      analysisTcodeGroup.classList.remove('hidden');
+      impactFgGroup.classList.add('hidden');
+      impactFunctionGroupEl.value = '';
     }
   });
 
@@ -254,6 +328,28 @@
 
   btnAnalysis.addEventListener('click', () => {
     openAnalysisModal();
+  });
+
+  btnReusable.addEventListener('click', () => {
+    openReusableModal();
+  });
+
+  btnImpact.addEventListener('click', () => {
+    openImpactModal();
+  });
+
+  reusableNewBtn.addEventListener('click', () => {
+    reusableView.classList.add('hidden');
+    welcomePanel.classList.remove('hidden');
+    navFeatureLabel.textContent = '';
+    openReusableModal();
+  });
+
+  impactNewBtn.addEventListener('click', () => {
+    impactView.classList.add('hidden');
+    welcomePanel.classList.remove('hidden');
+    navFeatureLabel.textContent = '';
+    openImpactModal();
   });
 
   reviewNewBtn.addEventListener('click', () => {
@@ -460,9 +556,301 @@
     if (e.target === analysisModal) closeAnalysisModal();
   });
 
+  // ================================================================
+  // REUSABLE ARTIFACTS — modal open/close + submit
+  // ================================================================
+  function openReusableModal() {
+    reusableQuestion.value = '';
+    reusableError.style.display = 'none';
+    reusableModal.classList.remove('hidden');
+    setTimeout(() => reusableQuestion.focus(), 50);
+  }
+  function closeReusableModal() {
+    reusableModal.classList.add('hidden');
+  }
+  reusableCancelBtn.addEventListener('click', closeReusableModal);
+  reusableModal.addEventListener('click', (e) => {
+    if (e.target === reusableModal) closeReusableModal();
+  });
+
+  reusableSubmitBtn.addEventListener('click', async () => {
+    const question = reusableQuestion.value.trim();
+    if (!question) {
+      reusableError.textContent = 'Please describe what you need.';
+      reusableError.style.display = 'block';
+      return;
+    }
+    reusableError.style.display = 'none';
+    closeReusableModal();
+
+    document.getElementById('loadingText').textContent = 'Searching reusable artifact catalog\u2026';
+    loadingOverlay.classList.remove('hidden');
+    reusableSubmitBtn.disabled = true;
+
+    try {
+      const res = await fetch('/api/reusable-artifacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+      });
+
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.detail || `Server error ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // Hide all views, show result view
+      welcomePanel.classList.add('hidden');
+      compareView.classList.add('hidden');
+      document.getElementById('reviewView').classList.add('hidden');
+      document.getElementById('tsView').classList.add('hidden');
+      document.getElementById('chatView').classList.add('hidden');
+      document.getElementById('trView').classList.add('hidden');
+      impactView.classList.add('hidden');
+      reusableView.classList.remove('hidden');
+
+      navFeatureLabel.textContent = 'Reusable Artifacts Tool';
+      reusableViewTitle.textContent = data.question || 'Reusable Artifacts';
+
+      // Build meta pills
+      reusableViewMeta.innerHTML = [
+        `<span class="system-tag src">S59 RAG catalog</span>`,
+        `<span class="system-tag dst">${data.rag_chunks_count} chunks matched</span>`,
+        data.fetched_artifacts.length > 0
+          ? `<span class="system-tag" style="background:#e8f5e9;color:#2e7d32;">${data.fetched_artifacts.filter(a=>a.status==='ok').length} sources fetched</span>`
+          : '',
+      ].join('');
+
+      // Show fetched artifacts badge
+      reusableBody.innerHTML = '';
+      if (data.fetched_artifacts && data.fetched_artifacts.length > 0) {
+        const fetchRows = data.fetched_artifacts.map(a => {
+          const icon = a.status === 'ok' ? '\u2705' : '\u274C';
+          return `<tr><td>${icon}</td><td><code>${escapeHtml(a.type)}</code></td><td><strong>${escapeHtml(a.name)}</strong></td><td style="color:#555;font-size:11px">${escapeHtml(a.status)}</td></tr>`;
+        }).join('');
+        const badge = document.createElement('div');
+        badge.className = 'fetched-badge';
+        badge.style.margin = '0 0 18px 0';
+        badge.innerHTML = `
+          <div class="fetched-header" style="cursor:default">
+            <span class="fetched-icon">&#129302;</span>
+            <span class="fetched-title">AI searched catalog on S59 &amp; fetched ${data.fetched_artifacts.length} artifact source(s) from D59</span>
+          </div>
+          <div class="fetched-body" style="display:block">
+            <table class="fetched-table">
+              <thead><tr><th></th><th>Type</th><th>Name</th><th>Status</th></tr></thead>
+              <tbody>${fetchRows}</tbody>
+            </table>
+          </div>`;
+        reusableBody.appendChild(badge);
+      }
+
+      // Render AI reply — use buildAnalysisDOM so ## sections render as styled cards
+      const aiFragment = buildAnalysisDOM(data.reply);
+      reusableBody.appendChild(aiFragment);
+
+    } catch (err) {
+      const isSapError = err.message && (
+        err.message.includes('Could not fetch') ||
+        err.message.includes('502') ||
+        err.message.includes('503') ||
+        err.message.includes('catalog returned empty')
+      );
+      if (isSapError) {
+        showErrorToast(
+          'SAP Data Fetch Failed',
+          err.message + '\n\nThis usually means the SAP OData service is unavailable or the system is unreachable. Please check the connection and try again.'
+        );
+      } else {
+        showErrorToast('Reusable Artifacts Error', err.message || 'An unexpected error occurred.');
+      }
+      openReusableModal();
+    } finally {
+      loadingOverlay.classList.add('hidden');
+      document.getElementById('loadingText').textContent = 'Fetching artifact &amp; running AI analysis\u2026';
+      reusableSubmitBtn.disabled = false;
+    }
+  });
+
   // Close on backdrop click
   retrofitModal.addEventListener('click', (e) => {
     if (e.target === retrofitModal) closeRetrofitModal();
+  });
+
+  // ----------------------------------------------------------------
+  // Impact Analysis modal helpers + submit
+  // ----------------------------------------------------------------
+  function openImpactModal() {
+    impactArtifactNameEl.value  = '';
+    impactArtifactTypeEl.value  = '';
+    impactFunctionGroupEl.value = '';
+    impactSystemEl.value        = '';
+    impactPlannedChangeEl.value = '';
+    impactFgGroup.classList.add('hidden');
+    impactError.style.display   = 'none';
+    impactSubmitBtn.disabled    = false;
+    impactModal.classList.remove('hidden');
+    setTimeout(() => impactArtifactNameEl.focus(), 50);
+  }
+  function closeImpactModal() {
+    impactModal.classList.add('hidden');
+    if (impactView.classList.contains('hidden')) navFeatureLabel.textContent = '';
+  }
+  impactCancelBtn.addEventListener('click', closeImpactModal);
+  impactModal.addEventListener('click', (e) => {
+    if (e.target === impactModal) closeImpactModal();
+  });
+
+  impactSubmitBtn.addEventListener('click', async () => {
+    const artifactName   = impactArtifactNameEl.value.trim();
+    const artifactType   = impactArtifactTypeEl.value;
+    const functionGroup  = impactFunctionGroupEl.value.trim() || null;
+    const system         = impactSystemEl.value;
+    const plannedChange  = impactPlannedChangeEl.value.trim();
+
+    if (!artifactName) {
+      impactError.textContent = 'Please enter the artifact name.';
+      impactError.style.display = 'block'; return;
+    }
+    if (!artifactType) {
+      impactError.textContent = 'Please select an artifact type.';
+      impactError.style.display = 'block'; return;
+    }
+    if (!system) {
+      impactError.textContent = 'Please select a system.';
+      impactError.style.display = 'block'; return;
+    }
+    if (!plannedChange) {
+      impactError.textContent = 'Please describe your planned change.';
+      impactError.style.display = 'block'; return;
+    }
+    if (artifactType === 'Function Module' && !functionGroup) {
+      impactError.textContent = 'Function Group is required for Function Module.';
+      impactError.style.display = 'block'; return;
+    }
+
+    impactError.style.display = 'none';
+    closeImpactModal();
+
+    document.getElementById('loadingText').textContent = 'Fetching where-used list & running AI impact analysis\u2026';
+    loadingOverlay.classList.remove('hidden');
+    impactSubmitBtn.disabled = true;
+
+    try {
+      const res = await fetch('/api/impact-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ artifact_name: artifactName, artifact_type: artifactType,
+                               function_group: functionGroup, system, planned_change: plannedChange }),
+      });
+
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.detail || `Server error ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // Hide all other views
+      welcomePanel.classList.add('hidden');
+      compareView.classList.add('hidden');
+      document.getElementById('reviewView').classList.add('hidden');
+      document.getElementById('tsView').classList.add('hidden');
+      document.getElementById('chatView').classList.add('hidden');
+      document.getElementById('trView').classList.add('hidden');
+      reusableView.classList.add('hidden');
+      impactView.classList.remove('hidden');
+
+      navFeatureLabel.textContent = 'Impact Analysis (Where-used)';
+      impactViewTitle.textContent = `Impact: ${data.artifact_name}`;
+
+      // Meta pills — use green for zero (safe), orange for 1+ (has dependents)
+      const wuCountStyle = data.where_used_count === 0
+        ? 'background:#e8f5e9;color:#2e7d32;'
+        : 'background:#fff3e0;color:#e65100;';
+      const wuCountIcon = data.where_used_count === 0 ? '\u2705' : '\uD83D\uDD17';
+      impactViewMeta.innerHTML = [
+        `<span class="system-tag src">${escapeHtml(data.artifact_type)}</span>`,
+        `<span class="system-tag" style="background:#e3f2fd;color:#1565c0;">Where-used: S59</span>`,
+        `<span class="system-tag dst">Source: ${escapeHtml(data.system)}</span>`,
+        `<span class="system-tag" style="${wuCountStyle}">${wuCountIcon} ${data.where_used_count} where-used entries</span>`,
+        data.where_used_count > 0
+          ? `<span class="system-tag" style="background:#e8f5e9;color:#2e7d32;">${data.unique_deps_count} unique objects</span>`
+          : '',
+      ].join(' ');
+
+      // Build result body
+      impactBody.innerHTML = '';
+
+      // Planned change info card
+      const changeCard = document.createElement('div');
+      changeCard.className = 'ts-section-card';
+      changeCard.style.marginBottom = '16px';
+      changeCard.innerHTML = `
+        <div class="ts-section-title" style="background:#1a1a2e;">&#9998; Planned Change</div>
+        <div class="ts-section-content" style="font-style:italic;color:#444;">"${escapeHtml(data.planned_change)}"</div>`;
+      impactBody.appendChild(changeCard);
+
+      // ── Zero where-used: show a clear "safe to proceed" card ──────────────
+      if (data.where_used_count === 0) {
+        const noImpactCard = document.createElement('div');
+        noImpactCard.className = 'ts-section-card';
+        noImpactCard.innerHTML = `
+          <div class="ts-section-title" style="background:#1b5e20;">&#10003; No Impact Found &mdash; Safe to Proceed</div>
+          <div class="ts-section-content">
+            <p style="margin:0 0 10px 0;">
+              No where-used entries found for <strong>${escapeHtml(data.artifact_name)}</strong> in S59.
+            </p>
+            <p style="margin:0 0 10px 0;">
+              No other ABAP object in the catalog references this artifact.
+              Your planned change has <strong>zero impact</strong> on other objects &mdash; you can proceed safely.
+            </p>
+            <p style="margin:0;padding:8px 10px;background:#f1f8e9;border-left:3px solid #558b2f;border-radius:4px;font-size:12px;color:#33691e;">
+              &#8505; The where-used catalog is maintained on <strong>S59</strong>.
+              Once the same API is deployed on other systems, results from those systems will also appear here.
+            </p>
+          </div>`;
+        impactBody.appendChild(noImpactCard);
+        return; // nothing more to render
+      }
+
+      // Fetched sources table
+      if (data.deep_fetched && data.deep_fetched.length > 0) {
+        const fetchRows = data.deep_fetched.map(a => {
+          const icon = a.status === 'ok' ? '\u2705' : '\u274C';
+          return `<tr><td>${icon}</td><td><code>${escapeHtml(a.type)}</code></td><td><strong>${escapeHtml(a.name)}</strong></td><td style="color:#555;font-size:11px">${escapeHtml(a.status)}</td></tr>`;
+        }).join('');
+        const badge = document.createElement('div');
+        badge.className = 'fetched-badge';
+        badge.style.margin = '0 0 18px 0';
+        badge.innerHTML = `
+          <div class="fetched-header" style="cursor:default">
+            <span class="fetched-icon">&#129302;</span>
+            <span class="fetched-title">AI fetched source of ${data.deep_fetched.length} dependent object(s) for deep analysis</span>
+          </div>
+          <div class="fetched-body" style="display:block">
+            <table class="fetched-table">
+              <thead><tr><th></th><th>Type</th><th>Name</th><th>Status</th></tr></thead>
+              <tbody>${fetchRows}</tbody>
+            </table>
+          </div>`;
+        impactBody.appendChild(badge);
+      }
+
+      // AI analysis rendered as section cards
+      const aiFragment = buildAnalysisDOM(data.reply);
+      impactBody.appendChild(aiFragment);
+
+    } catch (err) {
+      showErrorToast('Impact Analysis Error', err.message || 'An unexpected error occurred.');
+      openImpactModal();
+    } finally {
+      loadingOverlay.classList.add('hidden');
+      document.getElementById('loadingText').textContent = 'Fetching artifact &amp; running AI analysis\u2026';
+      impactSubmitBtn.disabled = false;
+    }
   });
 
   // Escape key closes either open modal
@@ -541,6 +929,9 @@
       openReviewModal();
       reviewError.textContent = err.message || 'Unexpected error. Please try again.';
       reviewError.style.display = 'block';
+      if (err.message && (err.message.includes('502') || err.message.includes('503') || err.message.includes('Could not fetch'))) {
+        showErrorToast('SAP Fetch Failed', err.message);
+      }
     } finally {
       loadingOverlay.classList.add('hidden');
       reviewSubmitBtn.disabled = false;
@@ -569,6 +960,8 @@
     trView.classList.add('hidden');
     tsView.classList.add('hidden');
     chatView.classList.add('hidden');
+    reusableView.classList.add('hidden');
+    impactView.classList.add('hidden');
     reviewView.classList.remove('hidden');
   }
 
@@ -631,7 +1024,7 @@
 
   // Render body text handling ```abap code blocks
   function renderBodyContent(el, text) {
-    const codeBlockRegex = /```(?:abap)?\n?([\s\S]*?)```/g;
+    const codeBlockRegex = /```(?:abap)?\n?([\s\S]*?)(?:```|$)/g;
     let lastIndex = 0;
     let match;
 
@@ -655,6 +1048,22 @@
   // Inline markdown text renderer (no code blocks)
   function renderMarkdownText(text) {
     let html = escapeHtml(text);
+
+    // Pipe tables → <table class="ai-table"> (must run before \n → <br>)
+    html = html.replace(
+      /^\|(.+)\|\n\|([-: |]+)\|\n((?:\|.+\|(?:\n|$))+)/gm,
+      (match, headerRow, _sep, bodyRows) => {
+        const ths = headerRow.split('|').map(h => h.trim()).filter(Boolean)
+          .map(h => `<th>${h}</th>`).join('');
+        const trs = bodyRows.trim().split('\n').map(row => {
+          const tds = row.split('|').map(c => c.trim()).filter(Boolean)
+            .map(c => `<td>${c}</td>`).join('');
+          return tds ? `<tr>${tds}</tr>` : '';
+        }).filter(Boolean).join('');
+        return `<table class="ai-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>\n`;
+      }
+    );
+
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
     html = html.replace(/((<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
@@ -664,6 +1073,8 @@
     html = html.replace(/<p>\s*<\/p>/g, '');
     html = html.replace(/<p>(<ul>)/g, '$1');
     html = html.replace(/<\/ul><\/p>/g, '</ul>');
+    html = html.replace(/<p>(<table)/g, '$1');
+    html = html.replace(/<\/table><\/p>/g, '</table>');
     return html;
   }
 
@@ -767,6 +1178,9 @@
       openTsModal();
       tsError.textContent = err.message || 'Unexpected error. Please try again.';
       tsError.style.display = 'block';
+      if (err.message && (err.message.includes('502') || err.message.includes('503') || err.message.includes('Could not fetch'))) {
+        showErrorToast('SAP Fetch Failed', err.message);
+      }
     } finally {
       loadingOverlay.classList.add('hidden');
       document.getElementById('loadingText').textContent = 'Fetching artifact & running AI analysis\u2026';
@@ -793,6 +1207,8 @@
     reviewView.classList.add('hidden');
     trView.classList.add('hidden');
     chatView.classList.add('hidden');
+    reusableView.classList.add('hidden');
+    impactView.classList.add('hidden');
     tsView.classList.remove('hidden');
   }
 
@@ -955,6 +1371,9 @@
       openTrModal();
       trError.textContent = err.message || 'Unexpected error. Please try again.';
       trError.style.display = 'block';
+      if (err.message && (err.message.includes('502') || err.message.includes('503') || err.message.includes('Could not fetch'))) {
+        showErrorToast('SAP Fetch Failed', err.message);
+      }
     } finally {
       loadingOverlay.classList.add('hidden');
       document.getElementById('loadingText').textContent = 'Fetching artifact & running AI analysis\u2026';
@@ -1012,6 +1431,8 @@
     reviewView.classList.add('hidden');
     tsView.classList.add('hidden');
     chatView.classList.add('hidden');
+    reusableView.classList.add('hidden');
+    impactView.classList.add('hidden');
     trView.classList.remove('hidden');
   }
 
@@ -1073,9 +1494,11 @@
       renderCompareView(data);
 
     } catch (err) {
-      // Re-open modal with error
       openRetrofitModal();
       showError(err.message || 'Unexpected error. Please try again.');
+      if (err.message && (err.message.includes('502') || err.message.includes('503') || err.message.includes('Could not fetch'))) {
+        showErrorToast('SAP Fetch Failed', err.message);
+      }
     } finally {
       loadingOverlay.classList.add('hidden');
       retrofitSubmitBtn.disabled = false;
@@ -1116,6 +1539,8 @@
     trView.classList.add('hidden');
     tsView.classList.add('hidden');
     chatView.classList.add('hidden');
+    reusableView.classList.add('hidden');
+    impactView.classList.add('hidden');
     compareView.classList.remove('hidden');
   }
 
@@ -1202,6 +1627,21 @@
 
     let html = escapeHtml(text);
 
+    // Pipe tables → <table class="ai-table"> (must run before \n → <br>)
+    html = html.replace(
+      /^\|(.+)\|\n\|([-: |]+)\|\n((?:\|.+\|(?:\n|$))+)/gm,
+      (match, headerRow, _sep, bodyRows) => {
+        const ths = headerRow.split('|').map(h => h.trim()).filter(Boolean)
+          .map(h => `<th>${h}</th>`).join('');
+        const trs = bodyRows.trim().split('\n').map(row => {
+          const tds = row.split('|').map(c => c.trim()).filter(Boolean)
+            .map(c => `<td>${c}</td>`).join('');
+          return tds ? `<tr>${tds}</tr>` : '';
+        }).filter(Boolean).join('');
+        return `<table class="ai-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>\n`;
+      }
+    );
+
     // ## headings → <h2>
     html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
 
@@ -1223,12 +1663,15 @@
     html = html.replace(/<\/h2><\/p>/g, '</h2>');
     html = html.replace(/<p>(<ul>)/g, '$1');
     html = html.replace(/<\/ul><\/p>/g, '</ul>');
+    html = html.replace(/<p>(<table)/g, '$1');
+    html = html.replace(/<\/table><\/p>/g, '</table>');
 
     return html;
   }
 
   function escapeHtml(str) {
-    return str
+    if (str === undefined || str === null) return '';
+    return String(str)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -1277,10 +1720,14 @@
     loadingOverlay.classList.remove('hidden');
     analysisSubmitBtn.disabled = true;
 
+    const initController = new AbortController();
+    const initTimeout = setTimeout(() => initController.abort(), 180000);
+
     try {
       const res = await fetch('/api/chat-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: initController.signal,
         body: JSON.stringify({
           artifact_name: chatState.artifactName,
           artifact_type: chatState.artifactType,
@@ -1299,8 +1746,10 @@
       } else {
         const data = await res.json();
         chatState.sourceCode = data.source_code;
-        // Show the context card so viewers understand what was sent to AI
         addContextCard(chatState, data.source_code);
+        if (data.fetched_artifacts && data.fetched_artifacts.length > 0) {
+          addFetchedBadge(data.fetched_artifacts);
+        }
         replyText = data.reply;
       }
 
@@ -1310,10 +1759,13 @@
 
     } catch (err) {
       typingEl.remove();
-      const errMsg = `\u26a0\ufe0f **Connection error:** ${err.message || 'Unexpected error'}`;
+      const errMsg = err.name === 'AbortError'
+        ? '\u26a0\ufe0f **Request timed out.** The AI took too long to respond. Please try again.'
+        : `\u26a0\ufe0f **Connection error:** ${err.message || 'Unexpected error'}`;
       chatState.messages.push({ role: 'assistant', content: errMsg });
       addChatMessage('ai', errMsg);
     } finally {
+      clearTimeout(initTimeout);
       loadingOverlay.classList.add('hidden');
       document.getElementById('loadingText').textContent = 'Fetching artifact & running AI analysis\u2026';
       analysisSubmitBtn.disabled = false;
@@ -1428,6 +1880,8 @@
     reviewView.classList.add('hidden');
     trView.classList.add('hidden');
     tsView.classList.add('hidden');
+    reusableView.classList.add('hidden');
+    impactView.classList.add('hidden');
     chatView.classList.remove('hidden');
   }
 
@@ -1465,6 +1919,54 @@
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
     return msgDiv;
+  }
+
+  // ----------------------------------------------------------------
+  // Fetched-artifacts badge — shown whenever AI auto-fetches code
+  // ----------------------------------------------------------------
+  function addFetchedBadge(artifacts) {
+    const badge = document.createElement('div');
+    badge.className = 'fetched-badge';
+
+    const okCount      = artifacts.filter(a => a.status === 'ok').length;
+    const skippedCount = artifacts.filter(a => a.status.startsWith('duplicate') || a.status.startsWith('skipped')).length;
+    const errorCount   = artifacts.filter(a => a.status !== 'ok' && !a.status.startsWith('duplicate') && !a.status.startsWith('skipped')).length;
+
+    const rows = artifacts.map(a => {
+      const icon = a.status === 'ok' ? '\u2705' : (a.status.startsWith('duplicate') || a.status.startsWith('skipped')) ? '\u23ED\uFE0F' : '\u274C';
+      return `<tr><td>${icon}</td><td><code>${escapeHtml(a.type)}</code></td><td><strong>${escapeHtml(a.name)}</strong></td><td class="fetch-status">${escapeHtml(a.status)}</td></tr>`;
+    }).join('');
+
+    badge.innerHTML = `
+      <div class="fetched-header" >
+        <span class="fetched-icon">&#129302;</span>
+        <span class="fetched-title">AI auto-fetched ${artifacts.length} artifact${artifacts.length !== 1 ? 's' : ''}</span>
+        <span class="fetched-pills">
+          ${okCount      > 0 ? `<span class="fetch-pill ok">${okCount} fetched</span>` : ''}
+          ${skippedCount > 0 ? `<span class="fetch-pill skip">${skippedCount} skipped</span>` : ''}
+          ${errorCount   > 0 ? `<span class="fetch-pill err">${errorCount} failed</span>` : ''}
+        </span>
+        <span class="fetched-chevron">&#9654;</span>
+      </div>
+      <div class="fetched-body collapsed">
+        <table class="fetched-table">
+          <thead><tr><th></th><th>Type</th><th>Name</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+
+    const header  = badge.querySelector('.fetched-header');
+    const body    = badge.querySelector('.fetched-body');
+    const chev    = badge.querySelector('.fetched-chevron');
+    header.addEventListener('click', () => {
+      const open = !body.classList.contains('collapsed');
+      body.classList.toggle('collapsed', open);
+      chev.innerHTML = open ? '&#9654;' : '&#9660;';
+    });
+
+    chatMessages.appendChild(badge);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
   // ----------------------------------------------------------------
@@ -1509,10 +2011,14 @@
 
     const typingEl = addTypingIndicator();
 
+    const followupController = new AbortController();
+    const followupTimeout = setTimeout(() => followupController.abort(), 180000);
+
     try {
       const res = await fetch('/api/chat-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: followupController.signal,
         body: JSON.stringify({
           artifact_name: chatState.artifactName,
           artifact_type: chatState.artifactType,
@@ -1526,12 +2032,19 @@
       if (!res.ok) { const e = await res.json(); throw new Error(e.detail || `Server error ${res.status}`); }
       const data = await res.json();
       typingEl.remove();
+      if (data.fetched_artifacts && data.fetched_artifacts.length > 0) {
+        addFetchedBadge(data.fetched_artifacts);
+      }
       chatState.messages.push({ role: 'assistant', content: data.reply });
       addChatMessage('ai', data.reply);
     } catch (err) {
       typingEl.remove();
-      addChatMessage('ai', `\u26a0\ufe0f Error: ${err.message || 'Unexpected error'}`);
+      const msg = err.name === 'AbortError'
+        ? '\u26a0\ufe0f **Request timed out.** The AI took too long to respond. Please try again.'
+        : `\u26a0\ufe0f Error: ${err.message || 'Unexpected error'}`;
+      addChatMessage('ai', msg);
     } finally {
+      clearTimeout(followupTimeout);
       chatSendBtn.disabled = false;
       chatInput.focus();
     }

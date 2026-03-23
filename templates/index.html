@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ABAP AI Assistant Tool (ADC)</title>
+  <link rel="icon" type="image/png" href="/static/shell_logo.png" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <link rel="stylesheet" href="/static/style.css?v=14" />
@@ -14,7 +15,8 @@
       artifactTypes: {{ artifact_types | tojson }},
       codeReviewArtifactTypes: {{ code_review_artifact_types | tojson }},
       trValidSystems: {{ tr_valid_systems | tojson }},
-      analysisArtifactTypes: {{ analysis_artifact_types | tojson }}
+      analysisArtifactTypes: {{ analysis_artifact_types | tojson }},
+      impactArtifactTypes: {{ impact_artifact_types | tojson }}
     };
   </script>
 </head>
@@ -23,7 +25,7 @@
   <!-- ===================== NAVBAR ===================== -->
   <nav class="navbar">
     <a class="navbar-brand" href="/">
-      <div class="navbar-logo">&#9670;</div>
+      <img src="/static/shell_logo.png" alt="Shell" class="navbar-logo">
       <span class="navbar-title">ABAP AI Assistant Tool <span style="font-weight:400;font-size:15px;">(ADC)</span></span>
     </a>
     <span class="navbar-active-feature" id="navFeatureLabel"></span>
@@ -51,10 +53,9 @@
         TS Finalization Tool
       </button>
 
-      <button class="sidebar-btn disabled" data-feature="Reusable Artifacts Tool">
+      <button class="sidebar-btn" id="btn-reusable" data-feature="Reusable Artifacts Tool">
         <span class="btn-icon">&#9851;</span>
         Reusable Artifacts Tool
-        <span class="coming-soon-badge">Soon</span>
       </button>
 
       <button class="sidebar-btn" id="btn-analysis" data-feature="Analysis / Summarization">
@@ -62,10 +63,9 @@
         Analysis / Summarization
       </button>
 
-      <button class="sidebar-btn disabled" data-feature="Impact Analysis Tool">
+      <button class="sidebar-btn" id="btn-impact" data-feature="Impact Analysis (Where-used)">
         <span class="btn-icon">&#128279;</span>
-        Impact Analysis Tool
-        <span class="coming-soon-badge">Soon</span>
+        Impact Analysis <span style="font-size:11px;color:#aaa;font-weight:400;">(Where-used)</span>
       </button>
 
       <button class="sidebar-btn" id="btn-tr-sequencing" data-feature="TR Sequencing Analyser">
@@ -113,7 +113,7 @@
           </div>
           <div class="cap-card">
             <div class="cap-icon">&#128279;</div>
-            <h3>Impact Analysis Tool</h3>
+            <h3>Impact Analysis <small style="font-weight:400;font-size:12px;">(Where-used)</small></h3>
             <p>Before changing an object, understand exactly which programs, classes, and function modules depend on it and assess the blast radius.</p>
           </div>
           <div class="cap-card">
@@ -122,6 +122,18 @@
             <p>Check if all dependent Transport Requests have been released to a target system before you release your own TR.</p>
           </div>
         </div>
+      </div>
+
+      <!-- ======= IMPACT ANALYSIS RESULT VIEW ======= -->
+      <div class="review-view hidden" id="impactView">
+        <div class="review-header">
+          <div class="review-title-row">
+            <h2 id="impactViewTitle">Impact Analysis</h2>
+            <div id="impactViewMeta" class="review-meta"></div>
+          </div>
+          <button class="btn btn-secondary review-new-btn" id="impactNewBtn">&#8635; New Analysis</button>
+        </div>
+        <div class="review-body" id="impactBody"></div>
       </div>
 
       <!-- ======= TS FINALIZATION RESULTS VIEW ======= -->
@@ -137,6 +149,18 @@
           </div>
         </div>
         <div class="ts-body" id="tsBody"></div>
+      </div>
+
+      <!-- ======= REUSABLE ARTIFACTS RESULT VIEW ======= -->
+      <div class="reusable-view hidden" id="reusableView">
+        <div class="reusable-view-header">
+          <div class="reusable-view-title-row">
+            <h2 id="reusableViewTitle">Reusable Artifacts</h2>
+            <div id="reusableViewMeta" class="review-meta"></div>
+          </div>
+          <button class="btn btn-secondary review-new-btn" id="reusableNewBtn">&#8635; New Search</button>
+        </div>
+        <div class="reusable-body" id="reusableBody"></div>
       </div>
 
       <!-- ======= ANALYSIS / SUMMARIZATION CHAT VIEW ======= -->
@@ -269,10 +293,94 @@
     </main>
   </div><!-- /app-shell -->
 
+  <!-- ===================== ERROR TOAST ===================== -->
+  <div class="error-toast hidden" id="errorToast" role="alert">
+    <div class="error-toast-icon">&#9888;&#65039;</div>
+    <div class="error-toast-content">
+      <div class="error-toast-title" id="errorToastTitle">Something went wrong</div>
+      <div class="error-toast-message" id="errorToastMessage"></div>
+    </div>
+    <button class="error-toast-close" id="errorToastClose" title="Dismiss">&times;</button>
+  </div>
+
   <!-- ===================== LOADING ===================== -->
   <div class="loading-overlay hidden" id="loadingOverlay">
     <div class="spinner"></div>
     <p id="loadingText">Fetching artifact &amp; running AI analysis…</p>
+  </div>
+
+  <!-- ===================== IMPACT ANALYSIS MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="impactModal">
+    <div class="modal">
+      <h2>&#128279; Impact Analysis <span style="font-weight:400;font-size:14px;">(Where-used)</span></h2>
+      <p class="modal-subtitle">Find out exactly what will break before you change or delete an ABAP artifact.</p>
+
+      <div class="form-group">
+        <label for="impactArtifactName">Artifact Name</label>
+        <input type="text" id="impactArtifactName" placeholder="e.g. /SHL/MY_CLASS, ZMY_FM, ZMYPROGRAM" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="impactArtifactType">Artifact Type</label>
+        <select id="impactArtifactType">
+          <option value="" disabled selected>&mdash; Select type &mdash;</option>
+        </select>
+      </div>
+
+      <div class="form-group hidden" id="impactFgGroup">
+        <label for="impactFunctionGroup">Function Group <span style="font-weight:400;font-size:11.5px;color:#888;">(required for Function Module)</span></label>
+        <input type="text" id="impactFunctionGroup" placeholder="e.g. /SHL/MY_FG" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="impactSystem">System <span style="font-weight:400;font-size:11.5px;color:#888;">(for fetching source code of dependent objects)</span></label>
+        <select id="impactSystem">
+          <option value="" disabled selected>&mdash; Select system &mdash;</option>
+        </select>
+        <p style="margin:6px 0 0 0;padding:8px 10px;background:#e3f2fd;border-left:3px solid #1565c0;border-radius:4px;font-size:11.5px;color:#1a237e;line-height:1.5;">
+          <strong>&#8505;&#65039; Where-used lookup always runs on S59</strong> &mdash; this is the only system where the custom where-used API is currently deployed.
+          The system you select above is only used to fetch the <em>source code</em> of dependent objects for AI analysis.
+          If the artifact has no entries on S59, it means no other object references it &mdash; safe to change.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="impactPlannedChange">What do you plan to change or delete?</label>
+        <textarea id="impactPlannedChange" class="modal-textarea" rows="3"
+          placeholder="e.g. I want to remove the method SEND_EMAIL from this class&#10;e.g. I plan to rename the field VENDOR_ID to LIFNR&#10;e.g. I want to delete this entire function module"></textarea>
+      </div>
+
+      <p class="error-msg" id="impactError"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="impactCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="impactSubmitBtn">&#128279; Analyse Impact</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== REUSABLE ARTIFACTS MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="reusableModal">
+    <div class="modal">
+      <h2>&#9851; Reusable Artifacts Tool</h2>
+      <p class="modal-subtitle">Describe what you need to build and the AI will find pre-approved reusable classes and function modules from the organisation’s catalog.</p>
+      <p style="margin:0 0 14px 0;padding:8px 10px;background:#e3f2fd;border-left:3px solid #1565c0;border-radius:4px;font-size:11.5px;color:#1a237e;line-height:1.5;">
+        <strong>&#8505;&#65039; Catalog API is on S59 only</strong> &mdash; the reusable artifacts catalog and RAG search API are currently deployed on <strong>S59</strong>.
+        Once the API is replicated to other systems, results from those systems will also be available here.
+      </p>
+      <div class="form-group">
+        <label for="reusableQuestion">What are you trying to build or achieve?</label>
+        <textarea id="reusableQuestion" class="modal-textarea" rows="4"
+          placeholder="e.g. I need to send an email notification after a goods receipt&#10;e.g. I want to read vendor master data for a given company code&#10;e.g. How to post an FI document programmatically?"></textarea>
+      </div>
+
+      <p class="error-msg" id="reusableError"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="reusableCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="reusableSubmitBtn">&#128269; Search Catalog</button>
+      </div>
+    </div>
   </div>
 
   <!-- ===================== ANALYSIS / SUMMARIZATION MODAL ===================== -->
@@ -282,7 +390,7 @@
       <p class="modal-subtitle">Fetch an ABAP artifact and start an AI-powered analysis chat.</p>
 
       <div class="form-group">
-        <label for="analysisArtifactName">Artifact Name / TCode</label>
+        <label for="analysisArtifactName">Artifact Name</label>
         <input type="text" id="analysisArtifactName" placeholder="e.g. /SHL/MY_CLASS, ZMY_PROGRAM, ME21N" autocomplete="off" />
       </div>
 
@@ -300,7 +408,7 @@
 
       <div class="form-group hidden" id="analysisTcodeGroup">
         <label for="analysisTcode">TCode Context <span style="font-weight:400;font-size:11.5px;color:#888;">(optional)</span></label>
-        <input type="text" id="analysisTcode" placeholder="e.g. ME21N &mdash; transaction that calls this artifact" autocomplete="off" style="text-transform:uppercase" />
+        <input type="text" id="analysisTcode" placeholder="e.g. ME21N — purchase order creation that triggers this logic" autocomplete="off" style="text-transform:uppercase" />
       </div>
 
       <div class="form-group">
@@ -416,6 +524,11 @@
     <div class="modal">
       <h2>&#128640; TR Sequencing Analyser</h2>
       <p class="modal-subtitle">Check if all dependent TRs have been released to the target system.</p>
+
+      <p style="margin:0 0 14px 0;padding:8px 10px;background:#e3f2fd;border-left:3px solid #1565c0;border-radius:4px;font-size:11.5px;color:#1a237e;line-height:1.5;">
+        <strong>&#8505;&#65039; TR dependency API is on S59 only</strong> &mdash; the TR sequencing OData API is currently deployed on <strong>S59</strong>.
+        Once the API is replicated to other systems, cross-system TR dependency checks will be available here.
+      </p>
 
       <div class="form-group">
         <label for="trNumber">TR Number</label>
