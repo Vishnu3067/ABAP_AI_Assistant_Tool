@@ -609,6 +609,8 @@
       document.getElementById('chatView').classList.add('hidden');
       document.getElementById('trView').classList.add('hidden');
       impactView.classList.add('hidden');
+      document.getElementById('dradView').classList.add('hidden');
+      document.getElementById('namingConvView').classList.add('hidden');
       reusableView.classList.remove('hidden');
 
       navFeatureLabel.textContent = 'Reusable Artifacts Tool';
@@ -761,6 +763,8 @@
       document.getElementById('chatView').classList.add('hidden');
       document.getElementById('trView').classList.add('hidden');
       reusableView.classList.add('hidden');
+      document.getElementById('dradView').classList.add('hidden');
+      document.getElementById('namingConvView').classList.add('hidden');
       impactView.classList.remove('hidden');
 
       navFeatureLabel.textContent = 'Impact Analysis (Where-used)';
@@ -962,6 +966,8 @@
     chatView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
+    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('namingConvView').classList.add('hidden');
     reviewView.classList.remove('hidden');
   }
 
@@ -1209,6 +1215,8 @@
     chatView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
+    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('namingConvView').classList.add('hidden');
     tsView.classList.remove('hidden');
   }
 
@@ -1433,6 +1441,8 @@
     chatView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
+    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('namingConvView').classList.add('hidden');
     trView.classList.remove('hidden');
   }
 
@@ -1541,6 +1551,8 @@
     chatView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
+    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('namingConvView').classList.add('hidden');
     compareView.classList.remove('hidden');
   }
 
@@ -1882,6 +1894,8 @@
     tsView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
+    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('namingConvView').classList.add('hidden');
     chatView.classList.remove('hidden');
   }
 
@@ -2062,5 +2076,821 @@
   });
 
   chatSendBtn.addEventListener('click', sendChatMessage);
+
+  // ================================================================
+  // AI DRAD — Artefact Search & Code Fetch
+  // ================================================================
+
+  // State
+  let dradSearchResults = [];
+  let dradFetchResult   = null;
+  let dradSystems       = [];   // cached from /api/drad/systems
+
+  const dradView           = document.getElementById('dradView');
+  const dradViewTitle      = document.getElementById('dradViewTitle');
+  const dradViewMeta       = document.getElementById('dradViewMeta');
+  const dradBody           = document.getElementById('dradBody');
+  const dradNewBtn         = document.getElementById('dradNewBtn');
+  const dradOptimizeBtn    = document.getElementById('dradOptimizeBtn');
+
+  const dradSearchModal    = document.getElementById('dradSearchModal');
+  const dradDescription    = document.getElementById('dradDescription');
+  const dradSearchError    = document.getElementById('dradSearchError');
+  const dradSearchCancelBtn  = document.getElementById('dradSearchCancelBtn');
+  const dradSearchSubmitBtn  = document.getElementById('dradSearchSubmitBtn');
+
+  const dradResultsModal   = document.getElementById('dradResultsModal');
+  const dradCheckboxList   = document.getElementById('dradCheckboxList');
+  const dradResultsError   = document.getElementById('dradResultsError');
+  const dradResultsBackBtn = document.getElementById('dradResultsBackBtn');
+  const dradFetchCodeBtn   = document.getElementById('dradFetchCodeBtn');
+  const dradRetrofitBtn    = document.getElementById('dradRetrofitBtn');
+  const dradSelectAllBtn   = document.getElementById('dradSelectAllBtn');
+  const dradClearAllBtn    = document.getElementById('dradClearAllBtn');
+
+  const dradGenerateModal     = document.getElementById('dradGenerateModal');
+  const dradGenerateSubtitle  = document.getElementById('dradGenerateSubtitle');
+  const dradGenerateBody      = document.getElementById('dradGenerateBody');
+  const dradGenerateCloseBtn  = document.getElementById('dradGenerateCloseBtn');
+  const dradGenSystemWrap     = document.getElementById('dradGenSystemWrap');
+  const dradGenSystemSelect   = document.getElementById('dradGenSystemSelect');
+  const dradGenError          = document.getElementById('dradGenError');
+  const dradGenLoading        = document.getElementById('dradGenLoading');
+  const dradGenSubmitBtn      = document.getElementById('dradGenSubmitBtn');
+
+  // Fetch available systems once and cache (called on first search modal open)
+  async function _loadDradSystems() {
+    if (dradSystems.length > 0) return;
+    try {
+      const res = await fetch('/api/drad/systems');
+      if (res.ok) {
+        const data = await res.json();
+        dradSystems = data.systems || [];
+      }
+    } catch (_) { /* silently ignore — dropdown will be empty */ }
+  }
+
+  function openDradSearchModal() {
+    dradDescription.value = '';
+    dradSearchError.style.display = 'none';
+    dradSearchSubmitBtn.disabled = false;
+    dradSearchModal.classList.remove('hidden');
+    setTimeout(() => dradDescription.focus(), 50);
+    _loadDradSystems(); // kick off systems fetch in background
+  }
+
+  function closeDradSearchModal() {
+    dradSearchModal.classList.add('hidden');
+  }
+
+  function openDradResultsModal(matches) {
+    dradSearchResults = matches;
+    dradResultsError.style.display = 'none';
+
+    // Build checkbox list
+    dradCheckboxList.innerHTML = '';
+    if (matches.length === 0) {
+      dradCheckboxList.innerHTML = '<p style="padding:16px;color:#888;text-align:center;">No matching artefacts found. Try different keywords.</p>';
+      dradFetchCodeBtn.disabled = true;
+    } else {
+      matches.forEach((m, idx) => {
+        const row = document.createElement('label');
+        row.className = 'drad-checkbox-row';
+        row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;';
+        row.innerHTML = `
+          <input type="checkbox" data-index="${idx}" style="margin-top:3px;flex-shrink:0;" />
+          <div>
+            <span class="system-tag src" style="font-size:11px;">${escapeHtml(m.system_no)}</span>
+            <span style="font-weight:500;margin-left:6px;font-size:13px;">${escapeHtml(m.object_name)}</span>
+            <div style="color:#555;font-size:12px;margin-top:3px;">${escapeHtml(m.description)}</div>
+          </div>`;
+        dradCheckboxList.appendChild(row);
+      });
+      dradFetchCodeBtn.disabled = true;
+    }
+
+    dradResultsModal.classList.remove('hidden');
+    _updateFetchBtn();
+  }
+
+  function closeDradResultsModal() {
+    dradResultsModal.classList.add('hidden');
+  }
+
+  function _updateFetchBtn() {
+    const checked = dradCheckboxList.querySelectorAll('input[type=checkbox]:checked');
+    const count = checked.length;
+    dradFetchCodeBtn.disabled = count === 0;
+    dradRetrofitBtn.disabled  = count !== 2;
+    dradFetchCodeBtn.textContent = count > 0
+      ? `\uD83D\uDCE5 Fetch Code (${count} selected)`
+      : '\uD83D\uDCE5 Fetch Code';
+  }
+
+  dradCheckboxList.addEventListener('change', _updateFetchBtn);
+
+  dradSelectAllBtn.addEventListener('click', () => {
+    dradCheckboxList.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+    _updateFetchBtn();
+  });
+
+  dradClearAllBtn.addEventListener('click', () => {
+    dradCheckboxList.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    _updateFetchBtn();
+  });
+
+  // Sidebar button
+  document.getElementById('btn-drad').addEventListener('click', () => {
+    navFeatureLabel.textContent = 'AI DRAD';
+    openDradSearchModal();
+  });
+
+  dradSearchCancelBtn.addEventListener('click', closeDradSearchModal);
+  dradSearchModal.addEventListener('click', e => { if (e.target === dradSearchModal) closeDradSearchModal(); });
+
+  // Submit search
+  dradSearchSubmitBtn.addEventListener('click', async () => {
+    const desc = dradDescription.value.trim();
+    if (!desc) {
+      dradSearchError.textContent = 'Please describe the artefact you are looking for.';
+      dradSearchError.style.display = 'block';
+      return;
+    }
+    dradSearchError.style.display = 'none';
+    dradSearchSubmitBtn.disabled = true;
+    closeDradSearchModal();
+
+    document.getElementById('loadingText').textContent = 'Searching artefact catalog\u2026';
+    loadingOverlay.classList.remove('hidden');
+
+    try {
+      const res = await fetch('/api/drad/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: desc }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || `Server error ${res.status}`);
+      }
+
+      openDradResultsModal(data.matches || []);
+    } catch (err) {
+      showErrorToast('AI DRAD Search Error', err.message || 'Unexpected error during search.');
+      openDradSearchModal();
+    } finally {
+      loadingOverlay.classList.add('hidden');
+      dradSearchSubmitBtn.disabled = false;
+    }
+  });
+
+  // Back button returns to search modal
+  dradResultsBackBtn.addEventListener('click', () => {
+    closeDradResultsModal();
+    openDradSearchModal();
+  });
+
+  // ---- shared fetch helper ----
+  async function _doFetch(selectedItems, forceCompare) {
+    dradFetchCodeBtn.disabled = true;
+    dradRetrofitBtn.disabled  = true;
+    closeDradResultsModal();
+
+    document.getElementById('loadingText').textContent = forceCompare
+      ? 'Fetching code & running AI comparison\u2026'
+      : 'Fetching artefact source code\u2026';
+    loadingOverlay.classList.remove('hidden');
+
+    try {
+      const res = await fetch('/api/drad/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selected_items: selectedItems, do_ai_analysis: forceCompare }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || `Server error ${res.status}`);
+
+      // Fetch Code always shows view/accordion mode.
+      // Retrofit (forceCompare=true) overrides to compare mode.
+      if (forceCompare) {
+        data.mode = 'compare';
+      } else {
+        data.mode = 'view';
+      }
+
+      dradFetchResult = data;
+      renderDradView(data);
+    } catch (err) {
+      showErrorToast('AI DRAD Fetch Error', err.message || 'Unexpected error while fetching code.');
+      openDradResultsModal(dradSearchResults);
+    } finally {
+      loadingOverlay.classList.add('hidden');
+      dradFetchCodeBtn.disabled = false;
+      dradRetrofitBtn.disabled  = false;
+    }
+  }
+
+  // Fetch Code button — works for any selection count
+  dradFetchCodeBtn.addEventListener('click', async () => {
+    const checked = dradCheckboxList.querySelectorAll('input[type=checkbox]:checked');
+    const selectedItems = [];
+    checked.forEach(cb => {
+      const idx = parseInt(cb.dataset.index, 10);
+      const m = dradSearchResults[idx];
+      if (m) selectedItems.push({ system_no: m.system_no, object_name: m.object_name });
+    });
+    if (selectedItems.length === 0) {
+      dradResultsError.textContent = 'Please select at least one artefact.';
+      dradResultsError.style.display = 'block';
+      return;
+    }
+    dradResultsError.style.display = 'none';
+    await _doFetch(selectedItems, false);
+  });
+
+  // Retrofit button — only valid for exactly 2; warns otherwise
+  dradRetrofitBtn.addEventListener('click', async () => {
+    const checked = dradCheckboxList.querySelectorAll('input[type=checkbox]:checked');
+    if (checked.length !== 2) {
+      showErrorToast('AI DRAD — Retrofit', 'Please select exactly 2 artefacts to run Retrofit.');
+      return;
+    }
+    const selectedItems = [];
+    checked.forEach(cb => {
+      const idx = parseInt(cb.dataset.index, 10);
+      const m = dradSearchResults[idx];
+      if (m) selectedItems.push({ system_no: m.system_no, object_name: m.object_name });
+    });
+    dradResultsError.style.display = 'none';
+    await _doFetch(selectedItems, true);
+  });
+
+  dradNewBtn.addEventListener('click', () => {
+    dradView.classList.add('hidden');
+    dradOptimizeBtn.classList.add('hidden');
+    welcomePanel.classList.remove('hidden');
+    navFeatureLabel.textContent = '';
+    openDradSearchModal();
+  });
+
+  // ----------------------------------------------------------------
+  // Generate Code — two-step flow: pick system → AI generates
+  // ----------------------------------------------------------------
+  function _openGenerateCode(art1, art2) {
+    // Reset modal to initial state
+    dradGenerateSubtitle.textContent = 'Select the target system, then click Generate.';
+    dradGenerateBody.innerHTML = '';
+    dradGenError.style.display = 'none';
+    dradGenLoading.classList.add('hidden');
+    dradGenSystemWrap.style.display = '';
+    dradGenSubmitBtn.disabled = false;
+    dradGenSubmitBtn.style.display = '';
+
+    // Populate system dropdown from cached dradSystems
+    dradGenSystemSelect.innerHTML = '<option value="" disabled selected>&mdash; Select system &mdash;</option>';
+    const allSystems = dradSystems.length > 0
+      ? dradSystems
+      : [...new Set([art1.system_no, art2.system_no])]; // fallback to fetched artifact systems
+    allSystems.forEach(sys => {
+      const opt = document.createElement('option');
+      opt.value = sys;
+      opt.textContent = sys;
+      dradGenSystemSelect.appendChild(opt);
+    });
+
+    dradGenerateModal.classList.remove('hidden');
+
+    // Store references for the submit handler
+    dradGenerateModal._art1 = art1;
+    dradGenerateModal._art2 = art2;
+  }
+
+  dradGenSubmitBtn.addEventListener('click', async () => {
+    const targetSystem = dradGenSystemSelect.value;
+    if (!targetSystem) {
+      dradGenError.textContent = 'Please select a system to generate code for.';
+      dradGenError.style.display = 'block';
+      return;
+    }
+
+    const art1 = dradGenerateModal._art1;
+    const art2 = dradGenerateModal._art2;
+    if (!art1 || !art2) return;
+
+    const code1 = (art1.sections || []).map(s => s.code).join('\n');
+    const code2 = (art2.sections || []).map(s => s.code).join('\n');
+
+    // Transition to loading state
+    dradGenError.style.display = 'none';
+    dradGenSystemWrap.style.display = 'none';
+    dradGenSubmitBtn.style.display = 'none';
+    dradGenerateBody.innerHTML = '';
+    dradGenLoading.classList.remove('hidden');
+    dradGenerateSubtitle.textContent = `Generating optimized ABAP code for ${targetSystem}\u2026`;
+
+    try {
+      const res = await fetch('/api/drad/generate-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          artifacts: [
+            { system_no: art1.system_no, object_name: art1.object_name, code: code1 },
+            { system_no: art2.system_no, object_name: art2.object_name, code: code2 },
+          ],
+          target_system: targetSystem,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || `Server error ${res.status}`);
+
+      dradGenerateSubtitle.textContent = `AI-optimized code for ${data.target_system || targetSystem}`;
+      dradGenLoading.classList.add('hidden');
+      const frag = buildAnalysisDOM(data.generated_code);
+      dradGenerateBody.appendChild(frag);
+
+    } catch (err) {
+      dradGenLoading.classList.add('hidden');
+      dradGenSystemWrap.style.display = '';
+      dradGenSubmitBtn.style.display = '';
+      dradGenSubmitBtn.disabled = false;
+      dradGenerateSubtitle.textContent = 'Select the target system, then click Generate.';
+      dradGenError.textContent = err.message || 'AI generation failed. Please try again.';
+      dradGenError.style.display = 'block';
+    }
+  });
+
+  // Optimized Code button in the dradView header (compare mode only)
+  dradOptimizeBtn.addEventListener('click', () => {
+    if (!dradFetchResult) return;
+    const successful = (dradFetchResult.artifacts || []).filter(a => !a.error && (a.sections || []).length > 0);
+    if (successful.length !== 2) {
+      showErrorToast('AI DRAD', 'Need exactly 2 successfully fetched artifacts to generate code.');
+      return;
+    }
+    _openGenerateCode(successful[0], successful[1]);
+  });
+
+  dradGenerateCloseBtn.addEventListener('click', () => {
+    dradGenerateModal.classList.add('hidden');
+  });
+  dradGenerateModal.addEventListener('click', e => {
+    if (e.target === dradGenerateModal) dradGenerateModal.classList.add('hidden');
+  });
+
+  function renderDradView(data) {
+    // Hide all other views
+    welcomePanel.classList.add('hidden');
+    compareView.classList.add('hidden');
+    document.getElementById('reviewView').classList.add('hidden');
+    document.getElementById('tsView').classList.add('hidden');
+    document.getElementById('chatView').classList.add('hidden');
+    document.getElementById('trView').classList.add('hidden');
+    reusableView.classList.add('hidden');
+    impactView.classList.add('hidden');
+    document.getElementById('namingConvView').classList.add('hidden');
+    dradView.classList.remove('hidden');
+
+    navFeatureLabel.textContent = 'AI DRAD';
+    dradViewTitle.textContent = 'AI DRAD';
+
+    const artifacts = data.artifacts || [];
+    const summary = data.fetch_summary || {};
+
+    dradViewMeta.innerHTML = [
+      `<span class="system-tag src">${artifacts.length} artefact(s) selected</span>`,
+      summary.successful > 0 ? `<span class="system-tag dst">&#10003; ${summary.successful} fetched OK</span>` : '',
+      (summary.failed && summary.failed.length > 0) ? `<span class="system-tag" style="background:#fff3e0;color:#e65100;">&#9888; ${summary.failed.length} failed</span>` : '',
+    ].join(' ');
+
+    dradBody.innerHTML = '';
+
+    // Show fetch failures as an info card
+    if (summary.failed && summary.failed.length > 0) {
+      const errCard = document.createElement('div');
+      errCard.className = 'ts-section-card';
+      errCard.style.marginBottom = '16px';
+      const errRows = summary.failed.map(f =>
+        `<li><code>${escapeHtml(f.system_no + '/' + f.object_name)}</code>: ${escapeHtml(f.error)}</li>`
+      ).join('');
+      errCard.innerHTML = `
+        <div class="ts-section-title" style="background:#b71c1c;">&#9888; Failed to Fetch</div>
+        <div class="ts-section-content"><ul style="margin:0;padding-left:18px;">${errRows}</ul></div>`;
+      dradBody.appendChild(errCard);
+    }
+
+    if (data.mode === 'compare' && artifacts.length === 2) {
+      // Switch body to flex column (no scroll) so code+AI panels fill the viewport like Retrofit
+      dradBody.style.cssText = 'flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;overflow:hidden;padding:14px 24px 14px;';
+      // Show Optimized Code button in header
+      dradOptimizeBtn.classList.remove('hidden');
+      _renderDradCompare(data);
+    } else {
+      // Restore normal scrollable body
+      dradBody.style.cssText = '';
+      dradOptimizeBtn.classList.add('hidden');
+      _renderDradView(artifacts);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // Client-side LCS diff — produces {type,content}[] arrays for
+  // renderDiffTable (same format as the Retrofit backend).
+  // ----------------------------------------------------------------
+  function _computeDiff(lines1, lines2) {
+    const L1 = lines1.slice(0, 5000);
+    const L2 = lines2.slice(0, 5000);
+    const m = L1.length, n = L2.length;
+
+    // Flat Int32Array DP table
+    const dp = new Int32Array((m + 1) * (n + 1));
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const idx = i * (n + 1) + j;
+        if (L1[i - 1] === L2[j - 1]) {
+          dp[idx] = dp[(i - 1) * (n + 1) + (j - 1)] + 1;
+        } else {
+          dp[idx] = Math.max(dp[(i - 1) * (n + 1) + j], dp[i * (n + 1) + (j - 1)]);
+        }
+      }
+    }
+
+    // Backtrack
+    const leftLines = [], rightLines = [];
+    let i = m, j = n;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && L1[i - 1] === L2[j - 1]) {
+        leftLines.unshift({ type: 'equal',   content: L1[i - 1] });
+        rightLines.unshift({ type: 'equal',  content: L2[j - 1] });
+        i--; j--;
+      } else if (j > 0 && (i === 0 || dp[i * (n + 1) + (j - 1)] >= dp[(i - 1) * (n + 1) + j])) {
+        leftLines.unshift({ type: 'empty',   content: '' });
+        rightLines.unshift({ type: 'added',  content: L2[j - 1] });
+        j--;
+      } else {
+        leftLines.unshift({ type: 'removed', content: L1[i - 1] });
+        rightLines.unshift({ type: 'empty',  content: '' });
+        i--;
+      }
+    }
+    return { leftLines, rightLines };
+  }
+
+  // ----------------------------------------------------------------
+  // Compare mode — Retrofit-style side-by-side diff + AI analysis
+  // ----------------------------------------------------------------
+  function _renderDradCompare(data) {
+    const [a1, a2] = data.artifacts;
+
+    // Flatten sections into line arrays
+    const code1Lines = (a1.sections || []).flatMap(s => (s.code || '').split('\n'));
+    const code2Lines = (a2.sections || []).flatMap(s => (s.code || '').split('\n'));
+    const { leftLines, rightLines } = _computeDiff(code1Lines, code2Lines);
+
+    // ── Header row ──────────────────────────────────────────────
+    const header = document.createElement('div');
+    header.className = 'compare-header';
+    header.style.flexShrink = '0';
+    header.innerHTML = `
+      <h3 style="margin:0;font-size:15px;font-weight:600;">${escapeHtml(a1.object_name)}</h3>
+      <div class="compare-meta">
+        <span class="meta-badge src">${escapeHtml(a1.system_no)}</span>
+        <span class="meta-badge dst">${escapeHtml(a2.system_no)}</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="diff-legend">
+        <span class="diff-legend-item"><span class="legend-dot added"></span> Added</span>
+        <span class="diff-legend-item"><span class="legend-dot removed"></span> Removed</span>
+        <span class="diff-legend-item"><span class="legend-dot changed"></span> Changed</span>
+      </div>`;
+    dradBody.appendChild(header);
+
+    // ── Code panels (flex-driven height, synced scroll) ────────────
+    const row = document.createElement('div');
+    row.className = 'code-blocks-row';
+
+    const srcPanel = document.createElement('div');
+    srcPanel.className = 'code-block';
+    srcPanel.innerHTML = `
+      <div class="code-block-header">
+        <span>${escapeHtml(a1.object_name)}</span>
+        <span class="system-tag src">${escapeHtml(a1.system_no)}</span>
+      </div>
+      <div class="code-block-body" id="dradSrcBody">
+        <table class="diff-table" id="dradSrcTable"></table>
+      </div>`;
+
+    const dstPanel = document.createElement('div');
+    dstPanel.className = 'code-block';
+    dstPanel.innerHTML = `
+      <div class="code-block-header">
+        <span>${escapeHtml(a2.object_name)}</span>
+        <span class="system-tag dst">${escapeHtml(a2.system_no)}</span>
+      </div>
+      <div class="code-block-body" id="dradDstBody">
+        <table class="diff-table" id="dradDstTable"></table>
+      </div>`;
+
+    row.appendChild(srcPanel);
+    row.appendChild(dstPanel);
+    dradBody.appendChild(row);
+
+    // Render diff tables using the existing Retrofit renderDiffTable fn
+    renderDiffTable(document.getElementById('dradSrcTable'), leftLines, true);
+    renderDiffTable(document.getElementById('dradDstTable'), rightLines, false);
+
+    // Sync scroll between both panels
+    _syncDradScroll();
+
+    // ── AI Difference Analysis ───────────────────────────────────
+    if (data.ai_analysis) {
+      const aiSection = document.createElement('div');
+      aiSection.className = 'ai-block';
+      aiSection.innerHTML = `
+        <div class="ai-block-header">
+          <span class="ai-badge">AI</span> Difference Analysis
+        </div>
+        <div class="ai-block-body">${renderMarkdown(data.ai_analysis)}</div>`;
+      dradBody.appendChild(aiSection);
+    }
+  }
+
+  function _syncDradScroll() {
+    const srcBody = document.getElementById('dradSrcBody');
+    const dstBody = document.getElementById('dradDstBody');
+    if (!srcBody || !dstBody) return;
+    let syncing = false;
+    srcBody.addEventListener('scroll', () => {
+      if (syncing) return; syncing = true;
+      dstBody.scrollTop = srcBody.scrollTop; syncing = false;
+    });
+    dstBody.addEventListener('scroll', () => {
+      if (syncing) return; syncing = true;
+      srcBody.scrollTop = dstBody.scrollTop; syncing = false;
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // View mode — accordion cards with minimize / maximize toggle
+  // ----------------------------------------------------------------
+  function _renderDradView(artifacts) {
+    artifacts.forEach(art => {
+      const card = document.createElement('div');
+      card.className = 'ts-section-card';
+      card.style.marginBottom = '16px';
+
+      // Title bar with toggle button on the right
+      const titleEl = document.createElement('div');
+      titleEl.className = 'ts-section-title';
+      titleEl.style.cssText = 'background:linear-gradient(135deg,#FFF9C4 0%,#FFF176 100%);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;border-radius:8px 8px 0 0;padding:10px 16px;box-shadow:0 2px 4px rgba(0,0,0,0.08);';
+      titleEl.innerHTML = `
+        <span style="display:flex;align-items:center;gap:10px;">
+          <span style="font-weight:700;font-size:13.5px;color:#1a1a1a;font-family:var(--font-mono);">${escapeHtml(art.object_name)}</span>
+          <span style="font-size:11px;background:#1a1a1a;color:#FFF9C4;padding:2px 9px;border-radius:20px;font-weight:700;letter-spacing:0.5px;">${escapeHtml(art.system_no)}</span>
+        </span>
+        <button class="btn" style="background:#fff;border:none;color:#333;font-size:11.5px;padding:4px 12px;min-width:0;font-weight:600;border-radius:20px;box-shadow:0 1px 3px rgba(0,0,0,0.15);" title="Toggle sections">&#9658; Show</button>`;
+
+      const body = document.createElement('div');
+      body.className = 'ts-section-content';
+      body.style.cssText = 'background:#fff;border:1px solid #e8e8e8;border-top:none;border-radius:0 0 8px 8px;padding:8px 12px 12px;';
+
+      if (art.error) {
+        body.innerHTML = `<p style="color:#c62828;">&#9888; ${escapeHtml(art.error)}</p>`;
+      } else {
+        const sections = art.sections || [];
+        if (sections.length === 0) {
+          body.innerHTML = '<p style="color:#888;">No source code sections available.</p>';
+        } else {
+          sections.forEach(sec => {
+            // Snippet header bar: artifact name + hide/show + copy
+            const snippetBar = document.createElement('div');
+            snippetBar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#f6f8fa;border:1px solid #e0e0e0;border-left:4px solid #FFF176;border-radius:6px;padding:8px 12px;margin-top:8px;';
+
+            const snippetLabel = document.createElement('span');
+            snippetLabel.style.cssText = 'font-weight:600;font-size:12px;color:#24292e;font-family:var(--font-mono);';
+            snippetLabel.textContent = art.object_name + (sec.is_main ? '' : ' — ' + sec.label);
+
+            const snippetActions = document.createElement('div');
+            snippetActions.style.cssText = 'display:flex;gap:6px;align-items:center;';
+
+            // Copy button
+            const copyBtn = document.createElement('button');
+            copyBtn.style.cssText = 'background:#24292e;border:none;color:#fff;font-size:11px;padding:4px 12px;border-radius:20px;cursor:pointer;font-family:var(--font-ui);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.2);';
+            copyBtn.innerHTML = '&#128203; Copy';
+            copyBtn.addEventListener('click', () => {
+              navigator.clipboard.writeText(sec.code || '').then(() => {
+                copyBtn.innerHTML = '&#10003; Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => { copyBtn.innerHTML = '&#128203; Copy'; copyBtn.classList.remove('copied'); }, 2000);
+              }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = sec.code || '';
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                copyBtn.innerHTML = '&#10003; Copied!'; setTimeout(() => { copyBtn.innerHTML = '&#128203; Copy'; }, 2000);
+              });
+            });
+
+            // Toggle button for this individual snippet
+            const snipToggle = document.createElement('button');
+            snipToggle.style.cssText = 'background:#FFF9C4;border:1px solid #f0e060;color:#1a1a1a;font-size:11px;padding:4px 12px;border-radius:20px;cursor:pointer;font-family:var(--font-ui);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.1);';
+            snipToggle.innerHTML = '&#9658; Show';
+
+            snippetActions.appendChild(copyBtn);
+            snippetActions.appendChild(snipToggle);
+            snippetBar.appendChild(snippetLabel);
+            snippetBar.appendChild(snippetActions);
+
+            // Code pre (hidden by default) — light theme with line numbers
+            const pre = document.createElement('pre');
+            pre.style.cssText = 'display:none;margin:0;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 6px 6px;background:#fff;color:#24292e;font-size:12px;overflow:auto;max-height:420px;white-space:pre;font-family:var(--font-mono);padding:0;line-height:1.6;';
+
+            // Build line-numbered table like Retrofit view
+            const table = document.createElement('table');
+            table.style.cssText = 'width:100%;border-collapse:collapse;';
+            const lines = (sec.code || '(empty)').split('\n');
+            const tbody = document.createDocumentFragment();
+            lines.forEach((line, idx) => {
+              const tr = document.createElement('tr');
+              tr.style.cssText = 'background:#fff;';
+              tr.addEventListener('mouseenter', () => tr.style.background = '#f6f8fa');
+              tr.addEventListener('mouseleave', () => tr.style.background = '#fff');
+
+              const tdLn = document.createElement('td');
+              tdLn.style.cssText = 'width:44px;min-width:44px;text-align:right;padding:0 10px 0 0;color:#aaa;user-select:none;border-right:1px solid #eee;background:#f6f8fa;font-size:11px;vertical-align:top;';
+              tdLn.textContent = idx + 1;
+
+              const tdCode = document.createElement('td');
+              tdCode.style.cssText = 'padding:0 12px;white-space:pre;color:#24292e;font-size:12px;';
+              tdCode.textContent = line;
+
+              tr.appendChild(tdLn);
+              tr.appendChild(tdCode);
+              tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            pre.appendChild(table);
+
+            snipToggle.addEventListener('click', () => {
+              const isHidden = pre.style.display === 'none';
+              pre.style.display = isHidden ? '' : 'none';
+              snipToggle.innerHTML = isHidden ? '&#9660; Hide' : '&#9658; Show';
+            });
+
+            body.appendChild(snippetBar);
+            body.appendChild(pre);
+          });
+        }
+      }
+
+      // Start collapsed — body hidden, toggle shows 'Show'
+      // body is VISIBLE by default; only inner code blocks are hidden
+
+      // Toggle logic
+      const toggleBtn = titleEl.querySelector('button');
+      toggleBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const isHidden = body.style.display === 'none';
+        body.style.display = isHidden ? '' : 'none';
+        toggleBtn.innerHTML = isHidden ? '&#9660; Hide' : '&#9658; Show';
+      });
+      titleEl.addEventListener('click', () => toggleBtn.click());
+
+      card.appendChild(titleEl);
+      card.appendChild(body);
+      dradBody.appendChild(card);
+    });
+  }
+
+  // ================================================================
+  // Naming Convention Assistant
+  // ================================================================
+
+  const namingConvView        = document.getElementById('namingConvView');
+  const namingConvViewTitle   = document.getElementById('namingConvViewTitle');
+  const namingConvViewMeta    = document.getElementById('namingConvViewMeta');
+  const namingConvBody        = document.getElementById('namingConvBody');
+  const namingConvNewBtn      = document.getElementById('namingConvNewBtn');
+
+  const namingConvModal       = document.getElementById('namingConvModal');
+  const namingConvSystem      = document.getElementById('namingConvSystem');
+  const namingConvQuestion    = document.getElementById('namingConvQuestion');
+  const namingConvError       = document.getElementById('namingConvError');
+  const namingConvCancelBtn   = document.getElementById('namingConvCancelBtn');
+  const namingConvSubmitBtn   = document.getElementById('namingConvSubmitBtn');
+
+  function openNamingConvModal() {
+    namingConvQuestion.value = '';
+    namingConvSystem.value = '';
+    namingConvError.style.display = 'none';
+    namingConvSubmitBtn.disabled = false;
+    namingConvModal.classList.remove('hidden');
+    setTimeout(() => namingConvSystem.focus(), 50);
+  }
+
+  function closeNamingConvModal() {
+    namingConvModal.classList.add('hidden');
+  }
+
+  document.getElementById('btn-naming-conv').addEventListener('click', () => {
+    navFeatureLabel.textContent = 'Naming Convention Assistant';
+    openNamingConvModal();
+  });
+
+  namingConvCancelBtn.addEventListener('click', closeNamingConvModal);
+  namingConvModal.addEventListener('click', e => { if (e.target === namingConvModal) closeNamingConvModal(); });
+
+  namingConvNewBtn.addEventListener('click', () => {
+    namingConvView.classList.add('hidden');
+    welcomePanel.classList.remove('hidden');
+    navFeatureLabel.textContent = '';
+    openNamingConvModal();
+  });
+
+  namingConvSubmitBtn.addEventListener('click', async () => {
+    const question = namingConvQuestion.value.trim();
+    const system   = namingConvSystem.value;
+
+    if (!system) {
+      namingConvError.textContent = 'Please select a project (ADC or Nucleus).';
+      namingConvError.style.display = 'block';
+      return;
+    }
+    if (!question) {
+      namingConvError.textContent = 'Please enter your naming convention question.';
+      namingConvError.style.display = 'block';
+      return;
+    }
+
+    namingConvError.style.display = 'none';
+    namingConvSubmitBtn.disabled = true;
+    closeNamingConvModal();
+
+    document.getElementById('loadingText').textContent = 'Consulting naming convention standards\u2026';
+    loadingOverlay.classList.remove('hidden');
+
+    try {
+      const res = await fetch('/api/naming-conv/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, system }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.detail || `Server error ${res.status}`);
+
+      renderNamingConvView(data);
+
+    } catch (err) {
+      showErrorToast('Naming Convention Error', err.message || 'Unexpected error.');
+      openNamingConvModal();
+    } finally {
+      loadingOverlay.classList.add('hidden');
+      namingConvSubmitBtn.disabled = false;
+    }
+  });
+
+  function renderNamingConvView(data) {
+    // Hide all other views
+    welcomePanel.classList.add('hidden');
+    compareView.classList.add('hidden');
+    document.getElementById('reviewView').classList.add('hidden');
+    document.getElementById('tsView').classList.add('hidden');
+    document.getElementById('chatView').classList.add('hidden');
+    document.getElementById('trView').classList.add('hidden');
+    reusableView.classList.add('hidden');
+    impactView.classList.add('hidden');
+    document.getElementById('dradView').classList.add('hidden');
+    namingConvView.classList.remove('hidden');
+
+    navFeatureLabel.textContent = 'Naming Convention Assistant';
+    namingConvViewTitle.textContent = 'Naming Convention Assistant';
+
+    const prefixMap = { ADC: '/SHL/', Nucleus: '/DS1/' };
+    const prefix = prefixMap[data.system] || '';
+    namingConvViewMeta.innerHTML = [
+      `<span class="system-tag src">${escapeHtml(data.system)}</span>`,
+      prefix ? `<span class="system-tag" style="background:#e8f5e9;color:#2e7d32;">Prefix: ${escapeHtml(prefix)}</span>` : '',
+    ].join(' ');
+
+    namingConvBody.innerHTML = '';
+
+    // Question card
+    const qCard = document.createElement('div');
+    qCard.className = 'ts-section-card';
+    qCard.style.marginBottom = '16px';
+    qCard.innerHTML = `
+      <div class="ts-section-title" style="background:#1a1a2e;">&#10067; Your Question</div>
+      <div class="ts-section-content" style="font-style:italic;color:#444;">"${escapeHtml(data.question)}"</div>`;
+    namingConvBody.appendChild(qCard);
+
+    // Answer card
+    const aCard = document.createElement('div');
+    aCard.className = 'ts-section-card';
+    aCard.innerHTML = `
+      <div class="ts-section-title" style="background:#1b5e20;">&#128271; AI Answer</div>
+      <div class="ts-section-content" id="namingConvAnswerBody"></div>`;
+    namingConvBody.appendChild(aCard);
+    document.getElementById('namingConvAnswerBody').innerHTML = renderMarkdown(data.answer || 'No answer available.');
+  }
 
 })();

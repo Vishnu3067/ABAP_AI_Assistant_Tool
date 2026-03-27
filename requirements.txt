@@ -7,3 +7,6 @@ requests
 requests-negotiate-sspi
 truststore
 python-dotenv
+numpy
+scikit-learn
+openpyxl

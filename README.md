@@ -1,4 +1,4 @@
-# ABAP AI Assistant Tool (ADC)
+# ABAP AI Assistant Tool
 
 A browser-based web application built with **FastAPI** that empowers SAP ABAP developers to analyse, compare, review, and document ABAP artifacts — without needing Eclipse, SE80, or SAP GUI.
 
@@ -13,12 +13,14 @@ The tool connects to multiple SAP systems via **Windows SSPI (Kerberos) authenti
 | # | Feature | Description |
 |---|---------|-------------|
 | 1 | **Retrofit Tool** | Side-by-side diff comparison of an ABAP artifact across two SAP systems with AI-powered change analysis |
-| 2 | **Code Review / Optimization** | Automated review against coding standards: Mod Log compliance, CDS-first architecture, performance, and modern ABAP syntax |
-| 3 | **TS Finalization** | Generate a complete, structured Technical Specification document from live source code |
-| 4 | **Reusable Artifacts** | Discover pre-approved, reusable `/SHL/` classes and function modules from the organisation's catalog |
-| 5 | **Analysis / Summarization** | AI chat assistant to explain any ABAP artifact in plain language — purpose, logic flow, dependencies |
-| 6 | **Impact Analysis (Where-Used)** | Identify all objects that depend on a given artifact before making changes; AI risk assessment included |
-| 7 | **TR Sequencing Analyser** | Verify all Transport Request dependencies are released to the target system before releasing your own TR |
+| 2 | **AI DRAD** | Search the artifact catalog, fetch live ABAP source from H94/K94, compare two objects side-by-side, and generate AI-merged code |
+| 3 | **Naming Convention Assistant** | Ask natural-language questions about the S/4HANA naming convention standards; AI answers with the correct system prefix pre-injected |
+| 4 | **Code Review / Optimization** | Automated review against coding standards: Mod Log compliance, CDS-first architecture, performance, and modern ABAP syntax |
+| 5 | **TS Finalization** | Generate a complete, structured Technical Specification document from live source code |
+| 6 | **Reusable Artifacts** | Discover pre-approved, reusable `/SHL/` classes and function modules from the organisation's catalog |
+| 7 | **Analysis / Summarization** | AI chat assistant to explain any ABAP artifact in plain language — purpose, logic flow, dependencies |
+| 8 | **Impact Analysis (Where-Used)** | Identify all objects that depend on a given artifact before making changes; AI risk assessment included |
+| 9 | **TR Sequencing Analyser** | Verify all Transport Request dependencies are released to the target system before releasing your own TR |
 
 ---
 
@@ -26,10 +28,31 @@ The tool connects to multiple SAP systems via **Windows SSPI (Kerberos) authenti
 
 ```
 FASTAPI_AI_Tool/
-├── main.py               # FastAPI application — all routes, helpers, and AI prompts
+├── main.py               # FastAPI application entry point — registers all routers
 ├── requirements.txt      # Python dependencies
 ├── .env                  # Environment variables (SAP URLs, OpenAI key) — not committed
 ├── context.txt           # Detailed feature documentation and AI behaviour rules
+├── core/
+│   ├── config.py         # Centralised config (paths, env vars, system lists)
+│   ├── models.py         # Pydantic request/response models
+│   ├── ai_client.py      # Shared NVIDIA AI call helper
+│   ├── sap_client.py     # SAP ADT REST client (D59-P59 systems)
+│   ├── drad_search.py    # BM25+TF-IDF artifact search over artefacts.xlsx
+│   ├── drad_fetch.py     # SAP OData fetch from ZSB_MAIN_DEPENDENT_V2 (H94/K94)
+│   └── naming_conv.py    # DOCX-based Q&A with NVIDIA AI + system prefix injection
+├── routes/
+│   ├── retrofit.py       # /api/retrofit
+│   ├── review.py         # /api/code-review
+│   ├── ts.py             # /api/ts-finalization
+│   ├── reusable.py       # /api/reusable-artifacts
+│   ├── chat.py           # /api/chat-analysis
+│   ├── impact.py         # /api/impact-analysis
+│   ├── tr_seq.py         # /api/tr-sequencing
+│   ├── drad.py           # /api/drad/* (AI DRAD tool)
+│   └── naming_conv.py    # /api/naming-conv/ask
+├── tests/
+│   ├── test_drad.py      # 33 tests — AI DRAD endpoints + module unit tests
+│   └── test_naming_conv.py # 15 tests — Naming Convention endpoint + module
 ├── templates/
 │   └── index.html        # Single-page Jinja2 UI template
 └── static/
@@ -50,6 +73,7 @@ FASTAPI_AI_Tool/
 | SSL trust store | `truststore` (uses Windows system certificate store) |
 | AI / LLM | OpenAI Python SDK (`gpt-4o-mini` by default, configurable) |
 | Config management | `python-dotenv` |
+| Excel reading | `openpyxl` (AI DRAD artifact catalog) |
 | Frontend | Vanilla HTML / CSS / JavaScript |
 
 ---
@@ -67,12 +91,137 @@ FASTAPI_AI_Tool/
 
 > The TR Sequencing Analyser always fetches dependency data from **D59** and checks release status against the chosen destination system.
 
+### AI DRAD Systems
+
+| System ID | Role |
+|-----------|------|
+| `H94` | Source/reference system (RFC: NONE) |
+| `K94` | Target system (RFC: TRUSTING@K94_0020183341) |
+
+> To add more systems, extend `_RFC_MAPPING` in `core/drad_fetch.py`.
+
+---
+
+## Environment Variables (`.env`)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NVIDIA_API_KEY` | — | API key for NVIDIA AI endpoint |
+| `NVIDIA_API_URL` | — | NVIDIA AI base URL |
+| `SAP_D59_URL` … `SAP_P59_URL` | — | SAP ADT base URLs per system |
+| `DRAD_API_URL` | `https://sapash94.europe.shell.com:8694/…/ZSB_MAIN_DEPENDENT_V2/main` | OData endpoint for ABAP source fetch |
+| `DRAD_EXCEL_PATH` | `../AI-DRAD/artefacts.xlsx` | Path to artifact catalog Excel file |
+| `DRAD_DOCX_PATH` | `../AI-DRAD/S4HANA-Naming Convention Standards-v1.0 3.docx` | Path to naming convention DOCX |
+
 ---
 
 ## API Endpoints
 
 ### `GET /`
 Renders the main single-page HTML UI.
+
+---
+
+### `GET /api/drad/systems`
+Returns the list of SAP system IDs available in the artifact catalog.
+
+**Response:**
+```json
+{ "systems": ["H94", "K94"] }
+```
+
+---
+
+### `POST /api/drad/search`
+Searches the artifact catalog (artefacts.xlsx) using BM25 + TF-IDF hybrid scoring.
+
+**Request body:**
+```json
+{ "description": "goods receipt posting", "top_k": 15 }
+```
+
+**Response:**
+```json
+{
+  "matches": [
+    { "system_no": "H94", "object_name": "/DS1/R_GR_POST", "description": "...", "score": 0.87 }
+  ],
+  "total": 1,
+  "message": "Found 1 match"
+}
+```
+
+---
+
+### `POST /api/drad/fetch`
+Fetches live ABAP source for 1–10 selected artifacts from the SAP OData service.
+- **1 artifact** → `mode: "view"` — code accordion, no AI
+- **2 artifacts** → `mode: "compare"` — side-by-side panels + AI diff summary + Generate Code button
+- **3–10 artifacts** → `mode: "view"` — code accordion list
+
+**Request body:**
+```json
+{
+  "selected": [
+    { "system_no": "H94", "object_name": "/DS1/R_GR_POST" },
+    { "system_no": "K94", "object_name": "/DS1/R_GR_POST" }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "mode": "compare",
+  "artifacts": [
+    { "object_name": "/DS1/R_GR_POST", "system_no": "H94", "sections": [...], "error": null }
+  ],
+  "fetch_summary": { "requested": 2, "succeeded": 2, "failed": 0 },
+  "ai_analysis": "## Diff Summary\n..."
+}
+```
+
+---
+
+### `POST /api/drad/generate-code`
+Generates AI-merged ABAP code from exactly two compared artifacts.
+
+**Request body:**
+```json
+{
+  "artifacts": [
+    { "object_name": "/DS1/R_GR_POST", "system_no": "H94", "sections": [...], "error": null },
+    { "object_name": "/DS1/R_GR_POST", "system_no": "K94", "sections": [...], "error": null }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "generated_code": "REPORT /DS1/R_GR_POST.\n...",
+  "system_1": "H94",
+  "system_2": "K94",
+  "artifact_1": "/DS1/R_GR_POST",
+  "artifact_2": "/DS1/R_GR_POST"
+}
+```
+
+---
+
+### `POST /api/naming-conv/ask`
+Answers a natural-language question about the S/4HANA naming convention standards using the DOCX as context. The system prefix (`/SHL/` for ADC, `/DS1/` for Nucleus) is automatically injected into the AI prompt.
+
+**Request body:**
+```json
+{ "question": "How should I name a custom report?", "system": "ADC" }
+```
+`system` must be `"ADC"` or `"Nucleus"`.
+
+**Response:**
+```json
+{ "answer": "Custom reports should be named /SHL/R_...", "question": "...", "system": "ADC" }
+```
 
 ---
 

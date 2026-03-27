@@ -10,8 +10,8 @@ truststore.inject_into_ssl()
 load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
 
 client = OpenAI(
-    base_url=os.environ["NVIDIA_BASE_URL"],
-    api_key=os.environ["NVIDIA_API_KEY"],
+    base_url="https://integrate.api.nvidia.com/v1",
+    api_key="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",
 )
 
 completion = client.chat.completions.create(

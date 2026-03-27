@@ -59,3 +59,38 @@ class ImpactAnalysisRequest(BaseModel):
     function_group: Optional[str] = None
     system: str = "D59"
     planned_change: str   # what the user intends to do / delete / modify
+
+
+# ── AI-DRAD models ────────────────────────────────────────────────────────────
+
+class DradSearchRequest(BaseModel):
+    description: str
+
+
+class DradSelectedItem(BaseModel):
+    system_no: str
+    object_name: str
+
+
+class DradFetchRequest(BaseModel):
+    selected_items: list[DradSelectedItem]
+    do_ai_analysis: bool = False  # True only for Retrofit; plain Fetch Code skips AI
+
+
+class DradArtifactCode(BaseModel):
+    system_no: str
+    object_name: str
+    code: str
+
+
+class DradGenerateCodeRequest(BaseModel):
+    artifacts: list[DradArtifactCode]
+    target_system: str = ""  # Which system to generate code for; defaults to first artifact's system
+
+
+# ── Naming Convention Assistant models ────────────────────────────────────────
+
+class NamingConvRequest(BaseModel):
+    question: str
+    system: str   # "ADC" or "Nucleus"
+
