@@ -13,8 +13,7 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templa
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "valid_systems": VALID_SYSTEMS,
         "artifact_types": ARTIFACT_TYPES,
         "code_review_artifact_types": CODE_REVIEW_ARTIFACT_TYPES,
