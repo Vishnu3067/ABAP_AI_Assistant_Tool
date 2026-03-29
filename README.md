@@ -13,7 +13,7 @@ The tool connects to multiple SAP systems via **Windows SSPI (Kerberos) authenti
 | # | Feature | Description |
 |---|---------|-------------|
 | 1 | **Retrofit Tool** | Side-by-side diff comparison of an ABAP artifact across two SAP systems with AI-powered change analysis |
-| 2 | **AI DRAD** | Search the artifact catalog, fetch live ABAP source from H94/K94, compare two objects side-by-side, and generate AI-merged code |
+| 2 | **AI DARD** | Search the artifact catalog, fetch live ABAP source from H94/K94, compare two objects side-by-side, and generate AI-merged code |
 | 3 | **Naming Convention Assistant** | Ask natural-language questions about the S/4HANA naming convention standards; AI answers with the correct system prefix pre-injected |
 | 4 | **Code Review / Optimization** | Automated review against coding standards: Mod Log compliance, CDS-first architecture, performance, and modern ABAP syntax |
 | 5 | **TS Finalization** | Generate a complete, structured Technical Specification document from live source code |
@@ -37,8 +37,8 @@ FASTAPI_AI_Tool/
 │   ├── models.py         # Pydantic request/response models
 │   ├── ai_client.py      # Shared NVIDIA AI call helper
 │   ├── sap_client.py     # SAP ADT REST client (D59-P59 systems)
-│   ├── drad_search.py    # BM25+TF-IDF artifact search over artefacts.xlsx
-│   ├── drad_fetch.py     # SAP OData fetch from ZSB_MAIN_DEPENDENT_V2 (H94/K94)
+│   ├── dard_search.py    # BM25+TF-IDF artifact search over artefacts.xlsx
+│   ├── dard_fetch.py     # SAP OData fetch from ZSB_MAIN_DEPENDENT_V2 (H94/K94)
 │   └── naming_conv.py    # DOCX-based Q&A with NVIDIA AI + system prefix injection
 ├── routes/
 │   ├── retrofit.py       # /api/retrofit
@@ -48,10 +48,10 @@ FASTAPI_AI_Tool/
 │   ├── chat.py           # /api/chat-analysis
 │   ├── impact.py         # /api/impact-analysis
 │   ├── tr_seq.py         # /api/tr-sequencing
-│   ├── drad.py           # /api/drad/* (AI DRAD tool)
+│   ├── dard.py           # /api/dard/* (AI DARD tool)
 │   └── naming_conv.py    # /api/naming-conv/ask
 ├── tests/
-│   ├── test_drad.py      # 33 tests — AI DRAD endpoints + module unit tests
+│   ├── test_dard.py      # 33 tests — AI DARD endpoints + module unit tests
 │   └── test_naming_conv.py # 15 tests — Naming Convention endpoint + module
 ├── templates/
 │   └── index.html        # Single-page Jinja2 UI template
@@ -73,7 +73,7 @@ FASTAPI_AI_Tool/
 | SSL trust store | `truststore` (uses Windows system certificate store) |
 | AI / LLM | OpenAI Python SDK (`gpt-4o-mini` by default, configurable) |
 | Config management | `python-dotenv` |
-| Excel reading | `openpyxl` (AI DRAD artifact catalog) |
+| Excel reading | `openpyxl` (AI DARD artifact catalog) |
 | Frontend | Vanilla HTML / CSS / JavaScript |
 
 ---
@@ -91,14 +91,14 @@ FASTAPI_AI_Tool/
 
 > The TR Sequencing Analyser always fetches dependency data from **D59** and checks release status against the chosen destination system.
 
-### AI DRAD Systems
+### AI DARD Systems
 
 | System ID | Role |
 |-----------|------|
 | `H94` | Source/reference system (RFC: NONE) |
 | `K94` | Target system (RFC: TRUSTING@K94_0020183341) |
 
-> To add more systems, extend `_RFC_MAPPING` in `core/drad_fetch.py`.
+> To add more systems, extend `_RFC_MAPPING` in `core/dard_fetch.py`.
 
 ---
 
@@ -109,9 +109,9 @@ FASTAPI_AI_Tool/
 | `NVIDIA_API_KEY` | — | API key for NVIDIA AI endpoint |
 | `NVIDIA_API_URL` | — | NVIDIA AI base URL |
 | `SAP_D59_URL` … `SAP_P59_URL` | — | SAP ADT base URLs per system |
-| `DRAD_API_URL` | `https://sapash94.europe.shell.com:8694/…/ZSB_MAIN_DEPENDENT_V2/main` | OData endpoint for ABAP source fetch |
-| `DRAD_EXCEL_PATH` | `../AI-DRAD/artefacts.xlsx` | Path to artifact catalog Excel file |
-| `DRAD_DOCX_PATH` | `../AI-DRAD/S4HANA-Naming Convention Standards-v1.0 3.docx` | Path to naming convention DOCX |
+| `DARD_API_URL` | `https://sapash94.europe.shell.com:8694/…/ZSB_MAIN_DEPENDENT_V2/main` | OData endpoint for ABAP source fetch |
+| `DARD_EXCEL_PATH` | `../AI-DARD/artefacts.xlsx` | Path to artifact catalog Excel file |
+| `DARD_DOCX_PATH` | `../AI-DARD/S4HANA-Naming Convention Standards-v1.0 3.docx` | Path to naming convention DOCX |
 
 ---
 
@@ -122,7 +122,7 @@ Renders the main single-page HTML UI.
 
 ---
 
-### `GET /api/drad/systems`
+### `GET /api/dard/systems`
 Returns the list of SAP system IDs available in the artifact catalog.
 
 **Response:**
@@ -132,7 +132,7 @@ Returns the list of SAP system IDs available in the artifact catalog.
 
 ---
 
-### `POST /api/drad/search`
+### `POST /api/dard/search`
 Searches the artifact catalog (artefacts.xlsx) using BM25 + TF-IDF hybrid scoring.
 
 **Request body:**
@@ -153,7 +153,7 @@ Searches the artifact catalog (artefacts.xlsx) using BM25 + TF-IDF hybrid scorin
 
 ---
 
-### `POST /api/drad/fetch`
+### `POST /api/dard/fetch`
 Fetches live ABAP source for 1–10 selected artifacts from the SAP OData service.
 - **1 artifact** → `mode: "view"` — code accordion, no AI
 - **2 artifacts** → `mode: "compare"` — side-by-side panels + AI diff summary + Generate Code button
@@ -183,7 +183,7 @@ Fetches live ABAP source for 1–10 selected artifacts from the SAP OData servic
 
 ---
 
-### `POST /api/drad/generate-code`
+### `POST /api/dard/generate-code`
 Generates AI-merged ABAP code from exactly two compared artifacts.
 
 **Request body:**

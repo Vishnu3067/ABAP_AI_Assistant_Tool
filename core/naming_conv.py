@@ -38,7 +38,7 @@ def _extract_docx_text(docx_path: Path) -> str:
     if not docx_path.exists():
         raise FileNotFoundError(
             f"Naming convention document not found at: {docx_path}\n"
-            "Set DRAD_DOCX_PATH in your .env file to the correct location."
+            "Set DARD_DOCX_PATH in your .env file to the correct location."
         )
 
     with zipfile.ZipFile(str(docx_path), 'r') as z:

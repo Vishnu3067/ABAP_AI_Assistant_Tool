@@ -1,6 +1,6 @@
 """
-core/drad_search.py
-AI-DRAD: Artifact search module.
+core/dard_search.py
+AI-DARD: Artifact search module.
 
 Reads artefacts.xlsx and ranks rows against a natural-language description
 using a BM25 + TF-IDF hybrid scoring approach.

@@ -1,6 +1,6 @@
 """
-core/drad_fetch.py
-AI-DRAD: SAP OData fetch module.
+core/dard_fetch.py
+AI-DARD: SAP OData fetch module.
 
 Fetches ABAP program source code (main program + child dependencies)
 from the ZSB_MAIN_DEPENDENT_V2 OData service using Windows SSPI auth.
@@ -14,7 +14,7 @@ from typing import List
 import requests
 from requests_negotiate_sspi import HttpNegotiateAuth
 
-from core.config import DRAD_API_URL
+from core.config import DARD_API_URL
 
 
 # RFC destination per system ID — extend this as more systems are onboarded
@@ -35,7 +35,7 @@ def get_rfc_destination(system_no: str) -> str:
         raise ValueError(
             f"System '{system_no}' has no configured RFC destination. "
             f"Currently configured: {configured}. "
-            "Please add it to _RFC_MAPPING in core/drad_fetch.py."
+            "Please add it to _RFC_MAPPING in core/dard_fetch.py."
         )
     return dest
 
@@ -126,12 +126,12 @@ def fetch_artifact_code(system_no: str, object_name: str) -> dict:
             'error': str(e),
         }
 
-    if not DRAD_API_URL:
+    if not DARD_API_URL:
         return {
             'object_name': object_name,
             'system_no': system_no,
             'sections': [],
-            'error': "DRAD_API_URL is not configured in .env",
+            'error': "DARD_API_URL is not configured in .env",
         }
 
     session = _get_session()
@@ -144,7 +144,7 @@ def fetch_artifact_code(system_no: str, object_name: str) -> dict:
     }
 
     try:
-        response = session.get(DRAD_API_URL, params=params, timeout=30)
+        response = session.get(DARD_API_URL, params=params, timeout=30)
         response.raise_for_status()
         data = response.json()
         sections = _extract_sections(data, object_name)

@@ -61,30 +61,30 @@ class ImpactAnalysisRequest(BaseModel):
     planned_change: str   # what the user intends to do / delete / modify
 
 
-# ── AI-DRAD models ────────────────────────────────────────────────────────────
+# ── AI-DARD models ────────────────────────────────────────────────────────────
 
-class DradSearchRequest(BaseModel):
+class DardSearchRequest(BaseModel):
     description: str
 
 
-class DradSelectedItem(BaseModel):
+class DardSelectedItem(BaseModel):
     system_no: str
     object_name: str
 
 
-class DradFetchRequest(BaseModel):
-    selected_items: list[DradSelectedItem]
+class DardFetchRequest(BaseModel):
+    selected_items: list[DardSelectedItem]
     do_ai_analysis: bool = False  # True only for Retrofit; plain Fetch Code skips AI
 
 
-class DradArtifactCode(BaseModel):
+class DardArtifactCode(BaseModel):
     system_no: str
     object_name: str
     code: str
 
 
-class DradGenerateCodeRequest(BaseModel):
-    artifacts: list[DradArtifactCode]
+class DardGenerateCodeRequest(BaseModel):
+    artifacts: list[DardArtifactCode]
     target_system: str = ""  # Which system to generate code for; defaults to first artifact's system
 
 

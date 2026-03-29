@@ -64,7 +64,7 @@ class TestNamingConvEndpoint:
 
     def test_rejects_missing_docx(self, tmp_path):
         missing = tmp_path / "does_not_exist.docx"
-        with patch("routes.naming_conv.DRAD_DOCX_PATH", missing):
+        with patch("routes.naming_conv.DARD_DOCX_PATH", missing):
             res = client.post("/api/naming-conv/ask", json={
                 "question": "How to name a class?", "system": "ADC"
             })
@@ -73,7 +73,7 @@ class TestNamingConvEndpoint:
 
     def test_successful_adc_response(self, tmp_path):
         docx_path = _make_minimal_docx(tmp_path)
-        with patch("routes.naming_conv.DRAD_DOCX_PATH", docx_path), \
+        with patch("routes.naming_conv.DARD_DOCX_PATH", docx_path), \
              patch("core.naming_conv.call_ai", return_value="For ADC, use /SHL/CL_ for classes."):
             res = client.post("/api/naming-conv/ask", json={
                 "question": "How to name a class?", "system": "ADC"
@@ -86,7 +86,7 @@ class TestNamingConvEndpoint:
 
     def test_successful_nucleus_response(self, tmp_path):
         docx_path = _make_minimal_docx(tmp_path)
-        with patch("routes.naming_conv.DRAD_DOCX_PATH", docx_path), \
+        with patch("routes.naming_conv.DARD_DOCX_PATH", docx_path), \
              patch("core.naming_conv.call_ai", return_value="For Nucleus, use /DS1/CL_ for classes."):
             res = client.post("/api/naming-conv/ask", json={
                 "question": "How to name a class?", "system": "Nucleus"
@@ -97,7 +97,7 @@ class TestNamingConvEndpoint:
 
     def test_handles_ai_service_error_gracefully(self, tmp_path):
         docx_path = _make_minimal_docx(tmp_path)
-        with patch("routes.naming_conv.DRAD_DOCX_PATH", docx_path), \
+        with patch("routes.naming_conv.DARD_DOCX_PATH", docx_path), \
              patch("core.naming_conv.call_ai", side_effect=Exception("AI service unavailable")):
             # Should NOT raise 500 from route — the module returns an error dict
             res = client.post("/api/naming-conv/ask", json={

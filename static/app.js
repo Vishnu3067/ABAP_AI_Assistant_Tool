@@ -609,7 +609,7 @@
       document.getElementById('chatView').classList.add('hidden');
       document.getElementById('trView').classList.add('hidden');
       impactView.classList.add('hidden');
-      document.getElementById('dradView').classList.add('hidden');
+      document.getElementById('dardView').classList.add('hidden');
       document.getElementById('namingConvView').classList.add('hidden');
       reusableView.classList.remove('hidden');
 
@@ -763,7 +763,7 @@
       document.getElementById('chatView').classList.add('hidden');
       document.getElementById('trView').classList.add('hidden');
       reusableView.classList.add('hidden');
-      document.getElementById('dradView').classList.add('hidden');
+      document.getElementById('dardView').classList.add('hidden');
       document.getElementById('namingConvView').classList.add('hidden');
       impactView.classList.remove('hidden');
 
@@ -966,7 +966,7 @@
     chatView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
-    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('dardView').classList.add('hidden');
     document.getElementById('namingConvView').classList.add('hidden');
     reviewView.classList.remove('hidden');
   }
@@ -1215,7 +1215,7 @@
     chatView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
-    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('dardView').classList.add('hidden');
     document.getElementById('namingConvView').classList.add('hidden');
     tsView.classList.remove('hidden');
   }
@@ -1441,7 +1441,7 @@
     chatView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
-    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('dardView').classList.add('hidden');
     document.getElementById('namingConvView').classList.add('hidden');
     trView.classList.remove('hidden');
   }
@@ -1551,7 +1551,7 @@
     chatView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
-    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('dardView').classList.add('hidden');
     document.getElementById('namingConvView').classList.add('hidden');
     compareView.classList.remove('hidden');
   }
@@ -1894,7 +1894,7 @@
     tsView.classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
-    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('dardView').classList.add('hidden');
     document.getElementById('namingConvView').classList.add('hidden');
     chatView.classList.remove('hidden');
   }
@@ -2078,84 +2078,84 @@
   chatSendBtn.addEventListener('click', sendChatMessage);
 
   // ================================================================
-  // AI DRAD — Artefact Search & Code Fetch
+  // AI DARD — Artefact Search & Code Fetch
   // ================================================================
 
   // State
-  let dradSearchResults = [];
-  let dradFetchResult   = null;
-  let dradSystems       = [];   // cached from /api/drad/systems
+  let dardSearchResults = [];
+  let dardFetchResult   = null;
+  let dardSystems       = [];   // cached from /api/dard/systems
 
-  const dradView           = document.getElementById('dradView');
-  const dradViewTitle      = document.getElementById('dradViewTitle');
-  const dradViewMeta       = document.getElementById('dradViewMeta');
-  const dradBody           = document.getElementById('dradBody');
-  const dradNewBtn         = document.getElementById('dradNewBtn');
-  const dradOptimizeBtn    = document.getElementById('dradOptimizeBtn');
+  const dardView           = document.getElementById('dardView');
+  const dardViewTitle      = document.getElementById('dardViewTitle');
+  const dardViewMeta       = document.getElementById('dardViewMeta');
+  const dardBody           = document.getElementById('dardBody');
+  const dardNewBtn         = document.getElementById('dardNewBtn');
+  const dardOptimizeBtn    = document.getElementById('dardOptimizeBtn');
 
-  const dradSearchModal    = document.getElementById('dradSearchModal');
-  const dradDescription    = document.getElementById('dradDescription');
-  const dradSearchError    = document.getElementById('dradSearchError');
-  const dradSearchCancelBtn  = document.getElementById('dradSearchCancelBtn');
-  const dradSearchSubmitBtn  = document.getElementById('dradSearchSubmitBtn');
+  const dardSearchModal    = document.getElementById('dardSearchModal');
+  const dardDescription    = document.getElementById('dardDescription');
+  const dardSearchError    = document.getElementById('dardSearchError');
+  const dardSearchCancelBtn  = document.getElementById('dardSearchCancelBtn');
+  const dardSearchSubmitBtn  = document.getElementById('dardSearchSubmitBtn');
 
-  const dradResultsModal   = document.getElementById('dradResultsModal');
-  const dradCheckboxList   = document.getElementById('dradCheckboxList');
-  const dradResultsError   = document.getElementById('dradResultsError');
-  const dradResultsBackBtn = document.getElementById('dradResultsBackBtn');
-  const dradFetchCodeBtn   = document.getElementById('dradFetchCodeBtn');
-  const dradRetrofitBtn    = document.getElementById('dradRetrofitBtn');
-  const dradSelectAllBtn   = document.getElementById('dradSelectAllBtn');
-  const dradClearAllBtn    = document.getElementById('dradClearAllBtn');
+  const dardResultsModal   = document.getElementById('dardResultsModal');
+  const dardCheckboxList   = document.getElementById('dardCheckboxList');
+  const dardResultsError   = document.getElementById('dardResultsError');
+  const dardResultsBackBtn = document.getElementById('dardResultsBackBtn');
+  const dardFetchCodeBtn   = document.getElementById('dardFetchCodeBtn');
+  const dardRetrofitBtn    = document.getElementById('dardRetrofitBtn');
+  const dardSelectAllBtn   = document.getElementById('dardSelectAllBtn');
+  const dardClearAllBtn    = document.getElementById('dardClearAllBtn');
 
-  const dradGenerateModal     = document.getElementById('dradGenerateModal');
-  const dradGenerateSubtitle  = document.getElementById('dradGenerateSubtitle');
-  const dradGenerateBody      = document.getElementById('dradGenerateBody');
-  const dradGenerateCloseBtn  = document.getElementById('dradGenerateCloseBtn');
-  const dradGenSystemWrap     = document.getElementById('dradGenSystemWrap');
-  const dradGenSystemSelect   = document.getElementById('dradGenSystemSelect');
-  const dradGenError          = document.getElementById('dradGenError');
-  const dradGenLoading        = document.getElementById('dradGenLoading');
-  const dradGenSubmitBtn      = document.getElementById('dradGenSubmitBtn');
+  const dardGenerateModal     = document.getElementById('dardGenerateModal');
+  const dardGenerateSubtitle  = document.getElementById('dardGenerateSubtitle');
+  const dardGenerateBody      = document.getElementById('dardGenerateBody');
+  const dardGenerateCloseBtn  = document.getElementById('dardGenerateCloseBtn');
+  const dardGenSystemWrap     = document.getElementById('dardGenSystemWrap');
+  const dardGenSystemSelect   = document.getElementById('dardGenSystemSelect');
+  const dardGenError          = document.getElementById('dardGenError');
+  const dardGenLoading        = document.getElementById('dardGenLoading');
+  const dardGenSubmitBtn      = document.getElementById('dardGenSubmitBtn');
 
   // Fetch available systems once and cache (called on first search modal open)
-  async function _loadDradSystems() {
-    if (dradSystems.length > 0) return;
+  async function _loadDardSystems() {
+    if (dardSystems.length > 0) return;
     try {
-      const res = await fetch('/api/drad/systems');
+      const res = await fetch('/api/dard/systems');
       if (res.ok) {
         const data = await res.json();
-        dradSystems = data.systems || [];
+        dardSystems = data.systems || [];
       }
     } catch (_) { /* silently ignore — dropdown will be empty */ }
   }
 
-  function openDradSearchModal() {
-    dradDescription.value = '';
-    dradSearchError.style.display = 'none';
-    dradSearchSubmitBtn.disabled = false;
-    dradSearchModal.classList.remove('hidden');
-    setTimeout(() => dradDescription.focus(), 50);
-    _loadDradSystems(); // kick off systems fetch in background
+  function openDardSearchModal() {
+    dardDescription.value = '';
+    dardSearchError.style.display = 'none';
+    dardSearchSubmitBtn.disabled = false;
+    dardSearchModal.classList.remove('hidden');
+    setTimeout(() => dardDescription.focus(), 50);
+    _loadDardSystems(); // kick off systems fetch in background
   }
 
-  function closeDradSearchModal() {
-    dradSearchModal.classList.add('hidden');
+  function closeDardSearchModal() {
+    dardSearchModal.classList.add('hidden');
   }
 
-  function openDradResultsModal(matches) {
-    dradSearchResults = matches;
-    dradResultsError.style.display = 'none';
+  function openDardResultsModal(matches) {
+    dardSearchResults = matches;
+    dardResultsError.style.display = 'none';
 
     // Build checkbox list
-    dradCheckboxList.innerHTML = '';
+    dardCheckboxList.innerHTML = '';
     if (matches.length === 0) {
-      dradCheckboxList.innerHTML = '<p style="padding:16px;color:#888;text-align:center;">No matching artefacts found. Try different keywords.</p>';
-      dradFetchCodeBtn.disabled = true;
+      dardCheckboxList.innerHTML = '<p style="padding:16px;color:#888;text-align:center;">No matching artefacts found. Try different keywords.</p>';
+      dardFetchCodeBtn.disabled = true;
     } else {
       matches.forEach((m, idx) => {
         const row = document.createElement('label');
-        row.className = 'drad-checkbox-row';
+        row.className = 'dard-checkbox-row';
         row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;';
         row.innerHTML = `
           <input type="checkbox" data-index="${idx}" style="margin-top:3px;flex-shrink:0;" />
@@ -2164,67 +2164,67 @@
             <span style="font-weight:500;margin-left:6px;font-size:13px;">${escapeHtml(m.object_name)}</span>
             <div style="color:#555;font-size:12px;margin-top:3px;">${escapeHtml(m.description)}</div>
           </div>`;
-        dradCheckboxList.appendChild(row);
+        dardCheckboxList.appendChild(row);
       });
-      dradFetchCodeBtn.disabled = true;
+      dardFetchCodeBtn.disabled = true;
     }
 
-    dradResultsModal.classList.remove('hidden');
+    dardResultsModal.classList.remove('hidden');
     _updateFetchBtn();
   }
 
-  function closeDradResultsModal() {
-    dradResultsModal.classList.add('hidden');
+  function closeDardResultsModal() {
+    dardResultsModal.classList.add('hidden');
   }
 
   function _updateFetchBtn() {
-    const checked = dradCheckboxList.querySelectorAll('input[type=checkbox]:checked');
+    const checked = dardCheckboxList.querySelectorAll('input[type=checkbox]:checked');
     const count = checked.length;
-    dradFetchCodeBtn.disabled = count === 0;
-    dradRetrofitBtn.disabled  = count !== 2;
-    dradFetchCodeBtn.textContent = count > 0
+    dardFetchCodeBtn.disabled = count === 0;
+    dardRetrofitBtn.disabled  = count !== 2;
+    dardFetchCodeBtn.textContent = count > 0
       ? `\uD83D\uDCE5 Fetch Code (${count} selected)`
       : '\uD83D\uDCE5 Fetch Code';
   }
 
-  dradCheckboxList.addEventListener('change', _updateFetchBtn);
+  dardCheckboxList.addEventListener('change', _updateFetchBtn);
 
-  dradSelectAllBtn.addEventListener('click', () => {
-    dradCheckboxList.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+  dardSelectAllBtn.addEventListener('click', () => {
+    dardCheckboxList.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
     _updateFetchBtn();
   });
 
-  dradClearAllBtn.addEventListener('click', () => {
-    dradCheckboxList.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+  dardClearAllBtn.addEventListener('click', () => {
+    dardCheckboxList.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
     _updateFetchBtn();
   });
 
   // Sidebar button
-  document.getElementById('btn-drad').addEventListener('click', () => {
-    navFeatureLabel.textContent = 'AI DRAD';
-    openDradSearchModal();
+  document.getElementById('btn-dard').addEventListener('click', () => {
+    navFeatureLabel.textContent = 'AI DARD';
+    openDardSearchModal();
   });
 
-  dradSearchCancelBtn.addEventListener('click', closeDradSearchModal);
-  dradSearchModal.addEventListener('click', e => { if (e.target === dradSearchModal) closeDradSearchModal(); });
+  dardSearchCancelBtn.addEventListener('click', closeDardSearchModal);
+  dardSearchModal.addEventListener('click', e => { if (e.target === dardSearchModal) closeDardSearchModal(); });
 
   // Submit search
-  dradSearchSubmitBtn.addEventListener('click', async () => {
-    const desc = dradDescription.value.trim();
+  dardSearchSubmitBtn.addEventListener('click', async () => {
+    const desc = dardDescription.value.trim();
     if (!desc) {
-      dradSearchError.textContent = 'Please describe the artefact you are looking for.';
-      dradSearchError.style.display = 'block';
+      dardSearchError.textContent = 'Please describe the artefact you are looking for.';
+      dardSearchError.style.display = 'block';
       return;
     }
-    dradSearchError.style.display = 'none';
-    dradSearchSubmitBtn.disabled = true;
-    closeDradSearchModal();
+    dardSearchError.style.display = 'none';
+    dardSearchSubmitBtn.disabled = true;
+    closeDardSearchModal();
 
     document.getElementById('loadingText').textContent = 'Searching artefact catalog\u2026';
     loadingOverlay.classList.remove('hidden');
 
     try {
-      const res = await fetch('/api/drad/search', {
+      const res = await fetch('/api/dard/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description: desc }),
@@ -2235,27 +2235,27 @@
         throw new Error(data.detail || `Server error ${res.status}`);
       }
 
-      openDradResultsModal(data.matches || []);
+      openDardResultsModal(data.matches || []);
     } catch (err) {
-      showErrorToast('AI DRAD Search Error', err.message || 'Unexpected error during search.');
-      openDradSearchModal();
+      showErrorToast('AI DARD Search Error', err.message || 'Unexpected error during search.');
+      openDardSearchModal();
     } finally {
       loadingOverlay.classList.add('hidden');
-      dradSearchSubmitBtn.disabled = false;
+      dardSearchSubmitBtn.disabled = false;
     }
   });
 
   // Back button returns to search modal
-  dradResultsBackBtn.addEventListener('click', () => {
-    closeDradResultsModal();
-    openDradSearchModal();
+  dardResultsBackBtn.addEventListener('click', () => {
+    closeDardResultsModal();
+    openDardSearchModal();
   });
 
   // ---- shared fetch helper ----
   async function _doFetch(selectedItems, forceCompare) {
-    dradFetchCodeBtn.disabled = true;
-    dradRetrofitBtn.disabled  = true;
-    closeDradResultsModal();
+    dardFetchCodeBtn.disabled = true;
+    dardRetrofitBtn.disabled  = true;
+    closeDardResultsModal();
 
     document.getElementById('loadingText').textContent = forceCompare
       ? 'Fetching code & running AI comparison\u2026'
@@ -2263,7 +2263,7 @@
     loadingOverlay.classList.remove('hidden');
 
     try {
-      const res = await fetch('/api/drad/fetch', {
+      const res = await fetch('/api/dard/fetch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ selected_items: selectedItems, do_ai_analysis: forceCompare }),
@@ -2279,59 +2279,59 @@
         data.mode = 'view';
       }
 
-      dradFetchResult = data;
-      renderDradView(data);
+      dardFetchResult = data;
+      renderDardView(data);
     } catch (err) {
-      showErrorToast('AI DRAD Fetch Error', err.message || 'Unexpected error while fetching code.');
-      openDradResultsModal(dradSearchResults);
+      showErrorToast('AI DARD Fetch Error', err.message || 'Unexpected error while fetching code.');
+      openDardResultsModal(dardSearchResults);
     } finally {
       loadingOverlay.classList.add('hidden');
-      dradFetchCodeBtn.disabled = false;
-      dradRetrofitBtn.disabled  = false;
+      dardFetchCodeBtn.disabled = false;
+      dardRetrofitBtn.disabled  = false;
     }
   }
 
   // Fetch Code button — works for any selection count
-  dradFetchCodeBtn.addEventListener('click', async () => {
-    const checked = dradCheckboxList.querySelectorAll('input[type=checkbox]:checked');
+  dardFetchCodeBtn.addEventListener('click', async () => {
+    const checked = dardCheckboxList.querySelectorAll('input[type=checkbox]:checked');
     const selectedItems = [];
     checked.forEach(cb => {
       const idx = parseInt(cb.dataset.index, 10);
-      const m = dradSearchResults[idx];
+      const m = dardSearchResults[idx];
       if (m) selectedItems.push({ system_no: m.system_no, object_name: m.object_name });
     });
     if (selectedItems.length === 0) {
-      dradResultsError.textContent = 'Please select at least one artefact.';
-      dradResultsError.style.display = 'block';
+      dardResultsError.textContent = 'Please select at least one artefact.';
+      dardResultsError.style.display = 'block';
       return;
     }
-    dradResultsError.style.display = 'none';
+    dardResultsError.style.display = 'none';
     await _doFetch(selectedItems, false);
   });
 
   // Retrofit button — only valid for exactly 2; warns otherwise
-  dradRetrofitBtn.addEventListener('click', async () => {
-    const checked = dradCheckboxList.querySelectorAll('input[type=checkbox]:checked');
+  dardRetrofitBtn.addEventListener('click', async () => {
+    const checked = dardCheckboxList.querySelectorAll('input[type=checkbox]:checked');
     if (checked.length !== 2) {
-      showErrorToast('AI DRAD — Retrofit', 'Please select exactly 2 artefacts to run Retrofit.');
+      showErrorToast('AI DARD — Retrofit', 'Please select exactly 2 artefacts to run Retrofit.');
       return;
     }
     const selectedItems = [];
     checked.forEach(cb => {
       const idx = parseInt(cb.dataset.index, 10);
-      const m = dradSearchResults[idx];
+      const m = dardSearchResults[idx];
       if (m) selectedItems.push({ system_no: m.system_no, object_name: m.object_name });
     });
-    dradResultsError.style.display = 'none';
+    dardResultsError.style.display = 'none';
     await _doFetch(selectedItems, true);
   });
 
-  dradNewBtn.addEventListener('click', () => {
-    dradView.classList.add('hidden');
-    dradOptimizeBtn.classList.add('hidden');
+  dardNewBtn.addEventListener('click', () => {
+    dardView.classList.add('hidden');
+    dardOptimizeBtn.classList.add('hidden');
     welcomePanel.classList.remove('hidden');
     navFeatureLabel.textContent = '';
-    openDradSearchModal();
+    openDardSearchModal();
   });
 
   // ----------------------------------------------------------------
@@ -2339,58 +2339,58 @@
   // ----------------------------------------------------------------
   function _openGenerateCode(art1, art2) {
     // Reset modal to initial state
-    dradGenerateSubtitle.textContent = 'Select the target system, then click Generate.';
-    dradGenerateBody.innerHTML = '';
-    dradGenError.style.display = 'none';
-    dradGenLoading.classList.add('hidden');
-    dradGenSystemWrap.style.display = '';
-    dradGenSubmitBtn.disabled = false;
-    dradGenSubmitBtn.style.display = '';
+    dardGenerateSubtitle.textContent = 'Select the target system, then click Generate.';
+    dardGenerateBody.innerHTML = '';
+    dardGenError.style.display = 'none';
+    dardGenLoading.classList.add('hidden');
+    dardGenSystemWrap.style.display = '';
+    dardGenSubmitBtn.disabled = false;
+    dardGenSubmitBtn.style.display = '';
 
-    // Populate system dropdown from cached dradSystems
-    dradGenSystemSelect.innerHTML = '<option value="" disabled selected>&mdash; Select system &mdash;</option>';
-    const allSystems = dradSystems.length > 0
-      ? dradSystems
+    // Populate system dropdown from cached dardSystems
+    dardGenSystemSelect.innerHTML = '<option value="" disabled selected>&mdash; Select system &mdash;</option>';
+    const allSystems = dardSystems.length > 0
+      ? dardSystems
       : [...new Set([art1.system_no, art2.system_no])]; // fallback to fetched artifact systems
     allSystems.forEach(sys => {
       const opt = document.createElement('option');
       opt.value = sys;
       opt.textContent = sys;
-      dradGenSystemSelect.appendChild(opt);
+      dardGenSystemSelect.appendChild(opt);
     });
 
-    dradGenerateModal.classList.remove('hidden');
+    dardGenerateModal.classList.remove('hidden');
 
     // Store references for the submit handler
-    dradGenerateModal._art1 = art1;
-    dradGenerateModal._art2 = art2;
+    dardGenerateModal._art1 = art1;
+    dardGenerateModal._art2 = art2;
   }
 
-  dradGenSubmitBtn.addEventListener('click', async () => {
-    const targetSystem = dradGenSystemSelect.value;
+  dardGenSubmitBtn.addEventListener('click', async () => {
+    const targetSystem = dardGenSystemSelect.value;
     if (!targetSystem) {
-      dradGenError.textContent = 'Please select a system to generate code for.';
-      dradGenError.style.display = 'block';
+      dardGenError.textContent = 'Please select a system to generate code for.';
+      dardGenError.style.display = 'block';
       return;
     }
 
-    const art1 = dradGenerateModal._art1;
-    const art2 = dradGenerateModal._art2;
+    const art1 = dardGenerateModal._art1;
+    const art2 = dardGenerateModal._art2;
     if (!art1 || !art2) return;
 
     const code1 = (art1.sections || []).map(s => s.code).join('\n');
     const code2 = (art2.sections || []).map(s => s.code).join('\n');
 
     // Transition to loading state
-    dradGenError.style.display = 'none';
-    dradGenSystemWrap.style.display = 'none';
-    dradGenSubmitBtn.style.display = 'none';
-    dradGenerateBody.innerHTML = '';
-    dradGenLoading.classList.remove('hidden');
-    dradGenerateSubtitle.textContent = `Generating optimized ABAP code for ${targetSystem}\u2026`;
+    dardGenError.style.display = 'none';
+    dardGenSystemWrap.style.display = 'none';
+    dardGenSubmitBtn.style.display = 'none';
+    dardGenerateBody.innerHTML = '';
+    dardGenLoading.classList.remove('hidden');
+    dardGenerateSubtitle.textContent = `Generating optimized ABAP code for ${targetSystem}\u2026`;
 
     try {
-      const res = await fetch('/api/drad/generate-code', {
+      const res = await fetch('/api/dard/generate-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2404,41 +2404,41 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || `Server error ${res.status}`);
 
-      dradGenerateSubtitle.textContent = `AI-optimized code for ${data.target_system || targetSystem}`;
-      dradGenLoading.classList.add('hidden');
+      dardGenerateSubtitle.textContent = `AI-optimized code for ${data.target_system || targetSystem}`;
+      dardGenLoading.classList.add('hidden');
       const frag = buildAnalysisDOM(data.generated_code);
-      dradGenerateBody.appendChild(frag);
+      dardGenerateBody.appendChild(frag);
 
     } catch (err) {
-      dradGenLoading.classList.add('hidden');
-      dradGenSystemWrap.style.display = '';
-      dradGenSubmitBtn.style.display = '';
-      dradGenSubmitBtn.disabled = false;
-      dradGenerateSubtitle.textContent = 'Select the target system, then click Generate.';
-      dradGenError.textContent = err.message || 'AI generation failed. Please try again.';
-      dradGenError.style.display = 'block';
+      dardGenLoading.classList.add('hidden');
+      dardGenSystemWrap.style.display = '';
+      dardGenSubmitBtn.style.display = '';
+      dardGenSubmitBtn.disabled = false;
+      dardGenerateSubtitle.textContent = 'Select the target system, then click Generate.';
+      dardGenError.textContent = err.message || 'AI generation failed. Please try again.';
+      dardGenError.style.display = 'block';
     }
   });
 
-  // Optimized Code button in the dradView header (compare mode only)
-  dradOptimizeBtn.addEventListener('click', () => {
-    if (!dradFetchResult) return;
-    const successful = (dradFetchResult.artifacts || []).filter(a => !a.error && (a.sections || []).length > 0);
+  // Optimized Code button in the dardView header (compare mode only)
+  dardOptimizeBtn.addEventListener('click', () => {
+    if (!dardFetchResult) return;
+    const successful = (dardFetchResult.artifacts || []).filter(a => !a.error && (a.sections || []).length > 0);
     if (successful.length !== 2) {
-      showErrorToast('AI DRAD', 'Need exactly 2 successfully fetched artifacts to generate code.');
+      showErrorToast('AI DARD', 'Need exactly 2 successfully fetched artifacts to generate code.');
       return;
     }
     _openGenerateCode(successful[0], successful[1]);
   });
 
-  dradGenerateCloseBtn.addEventListener('click', () => {
-    dradGenerateModal.classList.add('hidden');
+  dardGenerateCloseBtn.addEventListener('click', () => {
+    dardGenerateModal.classList.add('hidden');
   });
-  dradGenerateModal.addEventListener('click', e => {
-    if (e.target === dradGenerateModal) dradGenerateModal.classList.add('hidden');
+  dardGenerateModal.addEventListener('click', e => {
+    if (e.target === dardGenerateModal) dardGenerateModal.classList.add('hidden');
   });
 
-  function renderDradView(data) {
+  function renderDardView(data) {
     // Hide all other views
     welcomePanel.classList.add('hidden');
     compareView.classList.add('hidden');
@@ -2449,21 +2449,21 @@
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
     document.getElementById('namingConvView').classList.add('hidden');
-    dradView.classList.remove('hidden');
+    dardView.classList.remove('hidden');
 
-    navFeatureLabel.textContent = 'AI DRAD';
-    dradViewTitle.textContent = 'AI DRAD';
+    navFeatureLabel.textContent = 'AI DARD';
+    dardViewTitle.textContent = 'AI DARD';
 
     const artifacts = data.artifacts || [];
     const summary = data.fetch_summary || {};
 
-    dradViewMeta.innerHTML = [
+    dardViewMeta.innerHTML = [
       `<span class="system-tag src">${artifacts.length} artefact(s) selected</span>`,
       summary.successful > 0 ? `<span class="system-tag dst">&#10003; ${summary.successful} fetched OK</span>` : '',
       (summary.failed && summary.failed.length > 0) ? `<span class="system-tag" style="background:#fff3e0;color:#e65100;">&#9888; ${summary.failed.length} failed</span>` : '',
     ].join(' ');
 
-    dradBody.innerHTML = '';
+    dardBody.innerHTML = '';
 
     // Show fetch failures as an info card
     if (summary.failed && summary.failed.length > 0) {
@@ -2476,20 +2476,20 @@
       errCard.innerHTML = `
         <div class="ts-section-title" style="background:#b71c1c;">&#9888; Failed to Fetch</div>
         <div class="ts-section-content"><ul style="margin:0;padding-left:18px;">${errRows}</ul></div>`;
-      dradBody.appendChild(errCard);
+      dardBody.appendChild(errCard);
     }
 
     if (data.mode === 'compare' && artifacts.length === 2) {
       // Switch body to flex column (no scroll) so code+AI panels fill the viewport like Retrofit
-      dradBody.style.cssText = 'flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;overflow:hidden;padding:14px 24px 14px;';
+      dardBody.style.cssText = 'flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;overflow:hidden;padding:14px 24px 14px;';
       // Show Optimized Code button in header
-      dradOptimizeBtn.classList.remove('hidden');
-      _renderDradCompare(data);
+      dardOptimizeBtn.classList.remove('hidden');
+      _renderDardCompare(data);
     } else {
       // Restore normal scrollable body
-      dradBody.style.cssText = '';
-      dradOptimizeBtn.classList.add('hidden');
-      _renderDradView(artifacts);
+      dardBody.style.cssText = '';
+      dardOptimizeBtn.classList.add('hidden');
+      _renderDardView(artifacts);
     }
   }
 
@@ -2539,7 +2539,7 @@
   // ----------------------------------------------------------------
   // Compare mode — Retrofit-style side-by-side diff + AI analysis
   // ----------------------------------------------------------------
-  function _renderDradCompare(data) {
+  function _renderDardCompare(data) {
     const [a1, a2] = data.artifacts;
 
     // Flatten sections into line arrays
@@ -2563,7 +2563,7 @@
         <span class="diff-legend-item"><span class="legend-dot removed"></span> Removed</span>
         <span class="diff-legend-item"><span class="legend-dot changed"></span> Changed</span>
       </div>`;
-    dradBody.appendChild(header);
+    dardBody.appendChild(header);
 
     // ── Code panels (flex-driven height, synced scroll) ────────────
     const row = document.createElement('div');
@@ -2576,8 +2576,8 @@
         <span>${escapeHtml(a1.object_name)}</span>
         <span class="system-tag src">${escapeHtml(a1.system_no)}</span>
       </div>
-      <div class="code-block-body" id="dradSrcBody">
-        <table class="diff-table" id="dradSrcTable"></table>
+      <div class="code-block-body" id="dardSrcBody">
+        <table class="diff-table" id="dardSrcTable"></table>
       </div>`;
 
     const dstPanel = document.createElement('div');
@@ -2587,20 +2587,20 @@
         <span>${escapeHtml(a2.object_name)}</span>
         <span class="system-tag dst">${escapeHtml(a2.system_no)}</span>
       </div>
-      <div class="code-block-body" id="dradDstBody">
-        <table class="diff-table" id="dradDstTable"></table>
+      <div class="code-block-body" id="dardDstBody">
+        <table class="diff-table" id="dardDstTable"></table>
       </div>`;
 
     row.appendChild(srcPanel);
     row.appendChild(dstPanel);
-    dradBody.appendChild(row);
+    dardBody.appendChild(row);
 
     // Render diff tables using the existing Retrofit renderDiffTable fn
-    renderDiffTable(document.getElementById('dradSrcTable'), leftLines, true);
-    renderDiffTable(document.getElementById('dradDstTable'), rightLines, false);
+    renderDiffTable(document.getElementById('dardSrcTable'), leftLines, true);
+    renderDiffTable(document.getElementById('dardDstTable'), rightLines, false);
 
     // Sync scroll between both panels
-    _syncDradScroll();
+    _syncDardScroll();
 
     // ── AI Difference Analysis ───────────────────────────────────
     if (data.ai_analysis) {
@@ -2611,13 +2611,13 @@
           <span class="ai-badge">AI</span> Difference Analysis
         </div>
         <div class="ai-block-body">${renderMarkdown(data.ai_analysis)}</div>`;
-      dradBody.appendChild(aiSection);
+      dardBody.appendChild(aiSection);
     }
   }
 
-  function _syncDradScroll() {
-    const srcBody = document.getElementById('dradSrcBody');
-    const dstBody = document.getElementById('dradDstBody');
+  function _syncDardScroll() {
+    const srcBody = document.getElementById('dardSrcBody');
+    const dstBody = document.getElementById('dardDstBody');
     if (!srcBody || !dstBody) return;
     let syncing = false;
     srcBody.addEventListener('scroll', () => {
@@ -2633,7 +2633,7 @@
   // ----------------------------------------------------------------
   // View mode — accordion cards with minimize / maximize toggle
   // ----------------------------------------------------------------
-  function _renderDradView(artifacts) {
+  function _renderDardView(artifacts) {
     artifacts.forEach(art => {
       const card = document.createElement('div');
       card.className = 'ts-section-card';
@@ -2757,7 +2757,7 @@
 
       card.appendChild(titleEl);
       card.appendChild(body);
-      dradBody.appendChild(card);
+      dardBody.appendChild(card);
     });
   }
 
@@ -2859,7 +2859,7 @@
     document.getElementById('trView').classList.add('hidden');
     reusableView.classList.add('hidden');
     impactView.classList.add('hidden');
-    document.getElementById('dradView').classList.add('hidden');
+    document.getElementById('dardView').classList.add('hidden');
     namingConvView.classList.remove('hidden');
 
     navFeatureLabel.textContent = 'Naming Convention Assistant';

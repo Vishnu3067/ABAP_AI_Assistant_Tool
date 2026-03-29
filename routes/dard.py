@@ -1,45 +1,45 @@
 """
-routes/drad.py
-AI-DRAD: Artifact search and code fetch routes.
+routes/dard.py
+AI-DARD: Artifact search and code fetch routes.
 
 Endpoints:
-  GET  /api/drad/systems       - available SAP systems from Excel catalog
-  POST /api/drad/search        - search catalog by description
-  POST /api/drad/fetch         - fetch source code for selected artifacts
-  POST /api/drad/generate-code - AI-generate unified code from exactly 2 artifacts
+  GET  /api/dard/systems       - available SAP systems from Excel catalog
+  POST /api/dard/search        - search catalog by description
+  POST /api/dard/fetch         - fetch source code for selected artifacts
+  POST /api/dard/generate-code - AI-generate unified code from exactly 2 artifacts
 """
 
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from core.config import DRAD_EXCEL_PATH, DRAD_API_URL
-from core.models import DradSearchRequest, DradFetchRequest, DradGenerateCodeRequest
-from core.drad_search import search_artefacts, get_available_systems
-from core.drad_fetch import fetch_artifact_code
+from core.config import DARD_EXCEL_PATH, DARD_API_URL
+from core.models import DardSearchRequest, DardFetchRequest, DardGenerateCodeRequest
+from core.dard_search import search_artefacts, get_available_systems
+from core.dard_fetch import fetch_artifact_code
 from core.ai_client import call_ai
 
 router = APIRouter()
 
 
-@router.get("/api/drad/systems")
-async def drad_systems():
+@router.get("/api/dard/systems")
+async def dard_systems():
     """Return the list of SAP system IDs present in the artefacts catalog."""
-    if not DRAD_EXCEL_PATH.exists():
+    if not DARD_EXCEL_PATH.exists():
         raise HTTPException(
             500,
-            f"Artefacts catalog not found at: {DRAD_EXCEL_PATH}. "
-            "Set DRAD_EXCEL_PATH in .env."
+            f"Artefacts catalog not found at: {DARD_EXCEL_PATH}. "
+            "Set DARD_EXCEL_PATH in .env."
         )
     try:
-        systems = get_available_systems(DRAD_EXCEL_PATH)
+        systems = get_available_systems(DARD_EXCEL_PATH)
     except Exception as e:
         raise HTTPException(500, f"Failed to load systems: {str(e)[:200]}")
     return {"systems": systems}
 
 
-@router.post("/api/drad/search")
-async def drad_search(payload: DradSearchRequest):
+@router.post("/api/dard/search")
+async def dard_search(payload: DardSearchRequest):
     """
     Search the artefacts catalog using a natural-language description.
     Returns a ranked list of matches (system_no, object_name, description, score).
@@ -47,15 +47,15 @@ async def drad_search(payload: DradSearchRequest):
     if not payload.description.strip():
         raise HTTPException(400, "Description is required.")
 
-    if not DRAD_EXCEL_PATH.exists():
+    if not DARD_EXCEL_PATH.exists():
         raise HTTPException(
             500,
-            f"Artefacts catalog not found at: {DRAD_EXCEL_PATH}. "
-            "Set DRAD_EXCEL_PATH in .env."
+            f"Artefacts catalog not found at: {DARD_EXCEL_PATH}. "
+            "Set DARD_EXCEL_PATH in .env."
         )
 
     try:
-        matches = search_artefacts(DRAD_EXCEL_PATH, payload.description.strip())
+        matches = search_artefacts(DARD_EXCEL_PATH, payload.description.strip())
     except FileNotFoundError as e:
         raise HTTPException(500, str(e))
     except Exception as e:
@@ -68,8 +68,8 @@ async def drad_search(payload: DradSearchRequest):
     }
 
 
-@router.post("/api/drad/fetch")
-async def drad_fetch(payload: DradFetchRequest):
+@router.post("/api/dard/fetch")
+async def dard_fetch(payload: DardFetchRequest):
     """
     Fetch source code for the selected artifacts.
     - 1 artifact  : mode = "view"    (code tree + dependent objects)
@@ -123,8 +123,8 @@ async def drad_fetch(payload: DradFetchRequest):
     return response_data
 
 
-@router.post("/api/drad/generate-code")
-async def drad_generate_code(payload: DradGenerateCodeRequest):
+@router.post("/api/dard/generate-code")
+async def dard_generate_code(payload: DardGenerateCodeRequest):
     """
     Ask NVIDIA AI to generate optimized ABAP code for both systems
     based on two existing artifact sources. Only valid for exactly 2 artifacts.

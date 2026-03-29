@@ -7,7 +7,7 @@ POST /api/naming-conv/ask  - answer a naming convention question using NVIDIA AI
 
 from fastapi import APIRouter, HTTPException
 
-from core.config import DRAD_DOCX_PATH
+from core.config import DARD_DOCX_PATH
 from core.models import NamingConvRequest
 from core.naming_conv import answer_naming_question, SYSTEM_PREFIXES
 
@@ -30,15 +30,15 @@ async def naming_conv_ask(payload: NamingConvRequest):
         valid = list(SYSTEM_PREFIXES.keys())
         raise HTTPException(400, f"System must be one of: {valid}. Got: '{payload.system}'.")
 
-    if not DRAD_DOCX_PATH.exists():
+    if not DARD_DOCX_PATH.exists():
         raise HTTPException(
             500,
-            f"Naming convention document not found at: {DRAD_DOCX_PATH}. "
-            "Set DRAD_DOCX_PATH in .env to the correct path."
+            f"Naming convention document not found at: {DARD_DOCX_PATH}. "
+            "Set DARD_DOCX_PATH in .env to the correct path."
         )
 
     try:
-        result = answer_naming_question(DRAD_DOCX_PATH, payload.question.strip(), payload.system)
+        result = answer_naming_question(DARD_DOCX_PATH, payload.question.strip(), payload.system)
     except FileNotFoundError as e:
         raise HTTPException(500, str(e))
     except Exception as e:

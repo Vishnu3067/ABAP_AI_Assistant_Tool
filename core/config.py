@@ -8,12 +8,12 @@ truststore.inject_into_ssl()
 # .env lives in the project root (one level above this core/ folder)
 load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env", override=True)
 
-# AI-DRAD data files (Excel catalog + naming convention DOCX)
+# AI-DARD data files (Excel catalog + naming convention DOCX)
 # Bundled inside the project under data/ so the repo is fully self-contained
 _DATA_DIR = Path(__file__).parent.parent / "data"
-DRAD_EXCEL_PATH = Path(os.environ.get("DRAD_EXCEL_PATH", str(_DATA_DIR / "artefacts.xlsx")))
-DRAD_DOCX_PATH  = Path(os.environ.get("DRAD_DOCX_PATH",  str(_DATA_DIR / "S4HANA-Naming Convention Standards-v1.0 3.docx")))
-DRAD_API_URL    = os.environ.get("DRAD_API_URL", "https://sapash94.europe.shell.com:8694/sap/opu/odata/sap/ZSB_MAIN_DEPENDENT_V2/main")
+DARD_EXCEL_PATH = Path(os.environ.get("DARD_EXCEL_PATH", str(_DATA_DIR / "artefacts.xlsx")))
+DARD_DOCX_PATH  = Path(os.environ.get("DARD_DOCX_PATH",  str(_DATA_DIR / "S4HANA-Naming Convention Standards-v1.0 3.docx")))
+DARD_API_URL    = os.environ.get("DARD_API_URL", "https://sapash94.europe.shell.com:8694/sap/opu/odata/sap/ZSB_MAIN_DEPENDENT_V2/main")
 
 SAP_URL_D59 = os.environ.get("SAP_URL_D59", "").rstrip("/")
 SAP_URL_K59 = os.environ.get("SAP_URL_K59", "").rstrip("/")
