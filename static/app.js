@@ -198,10 +198,10 @@
 
   const systemDescriptions = {
     D59: 'D59 — Development',
-    K59: 'K59 — Quality',
+    K59: 'K59 — US Dev System',
     S59: 'S59 — Sandbox',
     L59: 'L59 — Business',
-    A59: 'A59 — Pre-production',
+    A59: 'A59 — Quality System',
     P59: 'P59 — Production',
   };
 
