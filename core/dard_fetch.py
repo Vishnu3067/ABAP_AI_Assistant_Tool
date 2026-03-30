@@ -138,8 +138,8 @@ def fetch_artifact_code(system_no: str, object_name: str) -> dict:
     params = {
         '$expand': 'to_Child',
         # TODO: re-enable rfc_destination filter once SAP OData service supports it
-        # '$filter': f"report_name eq '{object_name}' and rfc_destination eq '{rfc_dest}'",
-        '$filter': f"report_name eq '{object_name}'",
+        '$filter': f"report_name eq '{object_name}' and rfc_dest eq '{rfc_dest}'",
+        # '$filter': f"report_name eq '{object_name}'",
         '$format': 'json',
     }
 
