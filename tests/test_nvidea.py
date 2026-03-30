@@ -9,9 +9,12 @@ truststore.inject_into_ssl()
 # .env lives in the project root (one level above this tests/ folder)
 load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
 
+base_url = os.environ.get("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
+api_key = os.environ.get("NVIDIA_API_KEY", "")
+
 client = OpenAI(
-    base_url="https://integrate.api.nvidia.com/v1",
-    api_key="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",
+    base_url=base_url,
+    api_key=api_key,
 )
 
 completion = client.chat.completions.create(
