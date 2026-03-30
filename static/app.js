@@ -2181,7 +2181,8 @@
     const checked = dardCheckboxList.querySelectorAll('input[type=checkbox]:checked');
     const count = checked.length;
     dardFetchCodeBtn.disabled = count === 0;
-    dardRetrofitBtn.disabled  = count !== 2;
+    // dardRetrofitBtn.disabled  = count !== 2;
+    dardRetrofitBtn.disabled  = true;
     dardFetchCodeBtn.textContent = count > 0
       ? `\uD83D\uDCE5 Fetch Code (${count} selected)`
       : '\uD83D\uDCE5 Fetch Code';
@@ -2287,7 +2288,9 @@
     } finally {
       loadingOverlay.classList.add('hidden');
       dardFetchCodeBtn.disabled = false;
-      dardRetrofitBtn.disabled  = false;
+      // dardRetrofitBtn.disabled  = false;
+      dardRetrofitBtn.disabled = true;
+
     }
   }
 
