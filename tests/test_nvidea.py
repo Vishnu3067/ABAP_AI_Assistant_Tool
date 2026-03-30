@@ -19,7 +19,7 @@ client = OpenAI(
 
 completion = client.chat.completions.create(
     model=os.environ.get("OPENAI_MODEL", "openai/gpt-oss-120b"),
-    messages=[{"role": "user", "content": "What is MCP (Model Context Protocol)?"}],
+    messages=[{"role": "user", "content": "Do you have anything on /SHL/"}],
     temperature=1,
     top_p=1,
     max_tokens=4096,
