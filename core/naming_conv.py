@@ -122,4 +122,8 @@ INSTRUCTIONS:
             'system': system,
         }
 
+    # Hard post-processing: replace any stray occurrences of the wrong prefix
+    # (the document text contains /SHL/ examples that the AI may echo back)
+    answer = answer.replace(other_prefix, prefix)
+
     return {'answer': answer, 'question': question, 'system': system}

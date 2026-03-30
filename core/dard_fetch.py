@@ -69,6 +69,23 @@ def _parse_source_json(raw) -> str:
     return str(raw)
 
 
+def _strip_flowerbox_and_report(code: str) -> str:
+    """Remove leading flower-box comments and the REPORT statement from ABAP source."""
+    lines = code.splitlines()
+    report_idx = -1
+    for i, line in enumerate(lines):
+        upper_line = line.strip().upper()
+        if upper_line.startswith('REPORT ') or upper_line.startswith('REPORT\t') or upper_line == 'REPORT':
+            report_idx = i
+            break
+    if report_idx >= 0:
+        filtered = lines[report_idx + 1:]
+        while filtered and not filtered[0].strip():
+            filtered.pop(0)
+        return '\n'.join(filtered)
+    return code
+
+
 def _extract_sections(report_json: dict, fallback_name: str) -> List[dict]:
     """
     Parse OData JSON response into a list of code sections.
@@ -82,24 +99,18 @@ def _extract_sections(report_json: dict, fallback_name: str) -> List[dict]:
         return sections
 
     for idx, entry in enumerate(results):
-        # API returns source_json (JSON array of lines), not plain line_value
         main_code = _parse_source_json(entry.get('source_json') or entry.get('line_value'))
         main_name = (entry.get('report_name') or fallback_name).strip()
 
-        # Strip leading REPORT statement (cosmetic)
-        lines = main_code.splitlines()
-        if lines and lines[0].strip().upper().startswith('REPORT'):
-            main_code = '\n'.join(lines[1:]).lstrip('\n')
-
         label = main_name if idx == 0 else f"Main Source {idx + 1}"
-        sections.append({'label': label, 'code': main_code, 'is_main': idx == 0})
+        sections.append({'label': label, 'code': _strip_flowerbox_and_report(main_code), 'is_main': idx == 0})
 
         # Child dependencies / includes
         children = entry.get('to_Child', {}).get('results', [])
         for cidx, child in enumerate(children):
             child_code = _parse_source_json(child.get('source_json') or child.get('line_value'))
             child_name = (child.get('dep_object') or child.get('report_name') or f"Include {cidx + 1}").strip()
-            sections.append({'label': child_name, 'code': child_code, 'is_main': False})
+            sections.append({'label': child_name, 'code': _strip_flowerbox_and_report(child_code), 'is_main': False})
 
     return sections
 
