@@ -1,0 +1,45 @@
+      <!-- ======= TR SEQUENCING ANALYSER VIEW ======= -->
+      <div class="tr-view hidden" id="trView">
+        <div class="tr-view-header">
+          <div class="tr-view-title-row">
+            <h2 id="trViewTitle">TR Sequencing Analysis</h2>
+            <div id="trViewMeta" class="review-meta"></div>
+          </div>
+          <button class="btn btn-secondary review-new-btn" id="trNewBtn">&#8635; New Analysis</button>
+        </div>
+        <!-- Table section: 3/5 height -->
+        <div class="tr-table-section" id="trTableSection">
+          <div class="tr-table-inner">
+            <table class="tr-dep-table" id="trDepTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>obj_name</th>
+                  <th>obj_type</th>
+                  <th>request</th>
+                  <th>request_text</th>
+                  <th>request_owner</th>
+                  <th>request_status</th>
+                  <th>ref_obj_name</th>
+                  <th>ref_obj_type</th>
+                  <th>ref_obj_request</th>
+                  <th>ref_obj_req_owner</th>
+                  <th>ref_obj_req_status</th>
+                  <th>ref_obj_req_type</th>
+                  <th>ref_obj_parent_req</th>
+                  <th>short_text</th>
+                </tr>
+              </thead>
+              <tbody id="trDepTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- AI analysis section: 2/5 height -->
+        <div class="tr-ai-section">
+          <div class="ai-block-header">
+            <span class="ai-badge">AI</span>
+            TR Sequencing Analysis
+          </div>
+          <div class="ai-block-body" id="trAiBody"></div>
+        </div>
+      </div>

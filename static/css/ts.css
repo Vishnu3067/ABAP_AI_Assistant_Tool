@@ -1,0 +1,204 @@
+/* ============================================================
+   TS FINALIZATION VIEW
+   ============================================================ */
+.ts-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ================================================================
+   REUSABLE ARTIFACTS VIEW
+   ================================================================ */
+.reusable-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.reusable-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.reusable-view-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.reusable-view-title-row h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.reusable-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 20px 28px;
+  background: #f7f8fc;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ts-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.ts-view-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ts-view-title-row h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.ts-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-outline:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.ts-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #f7f8fc;
+}
+
+/* Individual TS section card */
+.ts-section-card {
+  background: #fff;
+  border: 1px solid #e3e8f0;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+.ts-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: linear-gradient(90deg, #1a1a2e 0%, #2c2c54 100%);
+  border-bottom: 1px solid #e3e8f0;
+  border-radius: 10px 10px 0 0;
+}
+
+.ts-section-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFD700;
+  letter-spacing: 0.3px;
+}
+
+.ts-copy-btn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.ts-copy-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.ts-copy-btn.copied {
+  background: #1a7a3a;
+  border-color: #1a7a3a;
+}
+
+/* TS content body */
+.ts-section-content {
+  padding: 14px 18px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #2c2c2c;
+}
+
+.ts-section-content p { margin: 0 0 6px; }
+.ts-section-content ul { margin: 4px 0 8px 18px; padding: 0; }
+.ts-section-content li { margin-bottom: 3px; }
+.ts-section-content h3 { font-size: 14px; font-weight: 700; margin: 10px 0 4px; color: #1a1a2e; }
+.ts-section-content h4 { font-size: 13px; font-weight: 600; margin: 8px 0 3px; color: #333; }
+.ts-section-content strong { color: #1a1a2e; }
+.ts-section-content br { display: block; margin: 2px 0; }
+
+/* Markdown tables inside TS sections */
+.ts-md-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin: 8px 0 12px;
+}
+
+.ts-md-table th {
+  background: #f0f2f8;
+  color: #1a1a2e;
+  font-weight: 700;
+  padding: 7px 10px;
+  text-align: left;
+  border: 1px solid #dce2f0;
+}
+
+.ts-md-table td {
+  padding: 6px 10px;
+  border: 1px solid #e8ecf6;
+  vertical-align: top;
+}
+
+.ts-md-table tr:nth-child(even) td {
+  background: #f9faff;
+}
+

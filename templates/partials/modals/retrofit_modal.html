@@ -1,0 +1,47 @@
+  <!-- ===================== RETROFIT MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="retrofitModal">
+    <div class="modal">
+      <h2>&#8644; Retro Fit Tool</h2>
+      <p class="modal-subtitle">Fetch and compare an ABAP artifact across two systems.</p>
+
+      <div class="form-group">
+        <label for="artifactName">Artifact Name</label>
+        <input type="text" id="artifactName" placeholder="e.g. /SHL/MY_CLASS or ZMY_PROGRAM" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="artifactType">Artifact Type</label>
+        <select id="artifactType">
+          <option value="" disabled selected>— Select type —</option>
+        </select>
+      </div>
+
+      <!-- Function group (shown only for FM) -->
+      <div class="form-group hidden" id="fgGroup">
+        <label for="functionGroup">Function Group</label>
+        <input type="text" id="functionGroup" placeholder="e.g. /SHL/MY_FG" autocomplete="off" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label for="sourceSystem">Source System</label>
+          <select id="sourceSystem">
+            <option value="" disabled selected>— Select —</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label for="destSystem">Destination System</label>
+          <select id="destSystem">
+            <option value="" disabled selected>— Select —</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="error-msg" id="retrofitError"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="retrofitCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="retrofitSubmitBtn">Compare</button>
+      </div>
+    </div>
+  </div>

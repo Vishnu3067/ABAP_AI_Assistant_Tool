@@ -1,0 +1,39 @@
+  <!-- ===================== CODE REVIEW MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="reviewModal">
+    <div class="modal">
+      <h2>&#128269; Code Review / Optimization</h2>
+      <p class="modal-subtitle">Fetch an ABAP artifact and get a full AI-powered code review.</p>
+
+      <div class="form-group">
+        <label for="reviewArtifactName">Artifact Name</label>
+        <input type="text" id="reviewArtifactName" placeholder="e.g. /SHL/MY_CLASS or ZMY_FM" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="reviewArtifactType">Artifact Type</label>
+        <select id="reviewArtifactType">
+          <option value="" disabled selected>— Select type —</option>
+        </select>
+      </div>
+
+      <!-- Function group (shown only for FM) -->
+      <div class="form-group hidden" id="reviewFgGroup">
+        <label for="reviewFunctionGroup">Function Group</label>
+        <input type="text" id="reviewFunctionGroup" placeholder="e.g. /SHL/MY_FG" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="reviewSystem">System</label>
+        <select id="reviewSystem">
+          <option value="" disabled selected>— Select system —</option>
+        </select>
+      </div>
+
+      <p class="error-msg" id="reviewError"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="reviewCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="reviewSubmitBtn">&#128269; Start Review</button>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,50 @@
+      <!-- ======= COMPARE VIEW (Retrofit result) ======= -->
+      <div class="compare-view hidden" id="compareView">
+
+        <div class="compare-header">
+          <h2 id="compareTitle">Comparing: —</h2>
+          <div class="compare-meta" id="compareMeta"></div>
+          <div class="spacer"></div>
+          <div class="diff-legend">
+            <span class="diff-legend-item"><span class="legend-dot added"></span> Added</span>
+            <span class="diff-legend-item"><span class="legend-dot removed"></span> Removed</span>
+            <span class="diff-legend-item"><span class="legend-dot changed"></span> Changed</span>
+          </div>
+        </div>
+
+        <!-- Code blocks: 3/5 height -->
+        <div class="code-blocks-row">
+          <!-- Source -->
+          <div class="code-block">
+            <div class="code-block-header">
+              <span id="srcLabel">Source</span>
+              <span class="system-tag src" id="srcTag">—</span>
+            </div>
+            <div class="code-block-body" id="srcCodeBody">
+              <table class="diff-table" id="srcDiffTable"></table>
+            </div>
+          </div>
+          <!-- Destination -->
+          <div class="code-block">
+            <div class="code-block-header">
+              <span id="dstLabel">Destination</span>
+              <span class="system-tag dst" id="dstTag">—</span>
+            </div>
+            <div class="code-block-body" id="dstCodeBody">
+              <table class="diff-table" id="dstDiffTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Analysis block: 2/5 height -->
+        <div class="ai-block">
+          <div class="ai-block-header">
+            <span class="ai-badge">AI</span>
+            Difference Analysis
+          </div>
+          <div class="ai-block-body" id="aiAnalysisBody">
+            <!-- rendered markdown-like content goes here -->
+          </div>
+        </div>
+
+      </div>

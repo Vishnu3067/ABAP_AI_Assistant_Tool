@@ -1,0 +1,49 @@
+  <!-- ===================== IMPACT ANALYSIS MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="impactModal">
+    <div class="modal">
+      <h2>&#128279; Impact Analysis</h2>
+      <p class="modal-subtitle">Find out exactly what will break before you change or delete an ABAP artifact.</p>
+
+      <div class="form-group">
+        <label for="impactArtifactName">Artifact Name</label>
+        <input type="text" id="impactArtifactName" placeholder="e.g. /SHL/MY_CLASS, ZMY_FM, ZMYPROGRAM" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="impactArtifactType">Artifact Type</label>
+        <select id="impactArtifactType">
+          <option value="" disabled selected>&mdash; Select type &mdash;</option>
+        </select>
+      </div>
+
+      <div class="form-group hidden" id="impactFgGroup">
+        <label for="impactFunctionGroup">Function Group <span style="font-weight:400;font-size:11.5px;color:#888;">(required for Function Module)</span></label>
+        <input type="text" id="impactFunctionGroup" placeholder="e.g. /SHL/MY_FG" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="impactSystem">System <span style="font-weight:400;font-size:11.5px;color:#888;">(for fetching source code of dependent objects)</span></label>
+        <select id="impactSystem">
+          <option value="" disabled selected>&mdash; Select system &mdash;</option>
+        </select>
+        <p style="margin:6px 0 0 0;padding:8px 10px;background:#e3f2fd;border-left:3px solid #1565c0;border-radius:4px;font-size:11.5px;color:#1a237e;line-height:1.5;">
+          <strong>&#8505;&#65039; Where-used lookup always runs on S59</strong> &mdash; this is the only system where the custom where-used API is currently deployed.
+          The system you select above is only used to fetch the <em>source code</em> of dependent objects for AI analysis.
+          If the artifact has no entries on S59, it means no other object references it &mdash; safe to change.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="impactPlannedChange">What do you plan to change or delete?</label>
+        <textarea id="impactPlannedChange" class="modal-textarea" rows="3"
+          placeholder="e.g. I want to remove the method SEND_EMAIL from this class&#10;e.g. I plan to rename the field VENDOR_ID to LIFNR&#10;e.g. I want to delete this entire function module"></textarea>
+      </div>
+
+      <p class="error-msg" id="impactError"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="impactCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="impactSubmitBtn">&#128279; Analyse Impact</button>
+      </div>
+    </div>
+  </div>

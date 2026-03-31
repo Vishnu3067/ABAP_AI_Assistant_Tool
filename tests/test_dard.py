@@ -169,7 +169,8 @@ class TestDardFetch:
                 "selected_items": [
                     {"system_no": "H94", "object_name": "/DS1/R_TEST1"},
                     {"system_no": "K94", "object_name": "/DS1/R_TEST2"},
-                ]
+                ],
+                "do_ai_analysis": True,
             })
         assert res.status_code == 200
         data = res.json()

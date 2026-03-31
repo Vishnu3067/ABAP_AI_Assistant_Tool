@@ -1,0 +1,148 @@
+/* ============================================================
+   TR SEQUENCING ANALYSER VIEW
+   ============================================================ */
+.tr-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tr-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.tr-view-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tr-view-title-row h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+/* Table section: 3/5 of remaining height */
+.tr-table-section {
+  flex: 3;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 2px solid #e0e0e0;
+  min-height: 0;
+}
+
+.tr-table-inner {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Dependency table */
+.tr-dep-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-family: var(--font-mono);
+}
+
+.tr-dep-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.tr-dep-table th {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.tr-dep-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+  color: #333;
+}
+
+.tr-dep-table tr:hover td {
+  background: #f5f7ff;
+}
+
+.tr-obj-name {
+  min-width: 180px;
+  word-break: break-all;
+}
+
+.tr-short-text {
+  min-width: 260px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.obj-type-badge {
+  display: inline-block;
+  background: #e8f0fe;
+  color: #1a5276;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+}
+
+/* TR status badges */
+.tr-status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tr-status-badge.released {
+  background: #d4edda;
+  color: #155724;
+}
+
+.tr-status-badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.tr-status-badge.missing {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* AI section: 2/5 of remaining height */
+.tr-ai-section {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.tr-ai-section .ai-block-header {
+  flex-shrink: 0;
+}
+
+.tr-ai-section .ai-block-body {
+  flex: 1;
+  overflow: auto;
+}
+

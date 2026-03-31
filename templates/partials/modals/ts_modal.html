@@ -1,0 +1,38 @@
+  <!-- ===================== TS FINALIZATION MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="tsModal">
+    <div class="modal">
+      <h2>&#128196; TS Finalization Tool</h2>
+      <p class="modal-subtitle">Fetch an ABAP artifact and generate a complete Technical Specification.</p>
+
+      <div class="form-group">
+        <label for="tsArtifactName">Artifact Name</label>
+        <input type="text" id="tsArtifactName" placeholder="e.g. /SHL/MY_CLASS or ZMY_PROGRAM" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="tsArtifactType">Artifact Type</label>
+        <select id="tsArtifactType">
+          <option value="" disabled selected>— Select type —</option>
+        </select>
+      </div>
+
+      <div class="form-group hidden" id="tsFgGroup">
+        <label for="tsFunctionGroup">Function Group</label>
+        <input type="text" id="tsFunctionGroup" placeholder="e.g. /SHL/MY_FG" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="tsSystem">Source System</label>
+        <select id="tsSystem">
+          <option value="" disabled selected>— Select system —</option>
+        </select>
+      </div>
+
+      <p class="error-msg" id="tsError"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="tsCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="tsSubmitBtn">&#128196; Generate TS</button>
+      </div>
+    </div>
+  </div>

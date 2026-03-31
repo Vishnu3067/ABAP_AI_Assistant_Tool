@@ -1,0 +1,25 @@
+  <!-- ===================== NAMING CONVENTION ASSISTANT MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="namingConvModal">
+    <div class="modal">
+      <h2>&#128271; Naming Convention Assistant</h2>
+      <p class="modal-subtitle">Ask any question about SAP ABAP naming conventions. The AI answers from the official standards document.</p>
+      <div class="form-group">
+        <label for="namingConvSystem">Project / System</label>
+        <select id="namingConvSystem">
+          <option value="" disabled selected>&mdash; Select project &mdash;</option>
+          <option value="ADC">ADC &nbsp;(prefix: /SHL/)</option>
+          <option value="Nucleus">Nucleus &nbsp;(prefix: /DS1/)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="namingConvQuestion">Your Question</label>
+        <textarea id="namingConvQuestion" class="modal-textarea" rows="3"
+          placeholder="e.g. How should I name an Adobe Form?&#10;e.g. What is the naming convention for a BADI implementation?&#10;e.g. How to name a CDS View?"></textarea>
+      </div>
+      <p class="error-msg" id="namingConvError"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="namingConvCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="namingConvSubmitBtn">&#128202; Get Answer</button>
+      </div>
+    </div>
+  </div>

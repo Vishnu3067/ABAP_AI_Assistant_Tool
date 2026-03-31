@@ -1,0 +1,48 @@
+  <!-- ===================== ANALYSIS / SUMMARIZATION MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="analysisModal">
+    <div class="modal">
+      <h2>&#128202; Analysis / Summarization</h2>
+      <p class="modal-subtitle">Fetch an ABAP artifact and start an AI-powered analysis chat.</p>
+
+      <div class="form-group">
+        <label for="analysisArtifactName">Artifact Name</label>
+        <input type="text" id="analysisArtifactName" placeholder="e.g. /SHL/MY_CLASS, ZMY_PROGRAM, ME21N" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="analysisArtifactType">Artifact Type</label>
+        <select id="analysisArtifactType">
+          <option value="" disabled selected>&mdash; Select type &mdash;</option>
+        </select>
+      </div>
+
+      <div class="form-group hidden" id="analysisFgGroup">
+        <label for="analysisFunctionGroup">Function Group</label>
+        <input type="text" id="analysisFunctionGroup" placeholder="e.g. /SHL/MY_FG" autocomplete="off" />
+      </div>
+
+      <div class="form-group hidden" id="analysisTcodeGroup">
+        <label for="analysisTcode">TCode Context <span style="font-weight:400;font-size:11.5px;color:#888;">(optional)</span></label>
+        <input type="text" id="analysisTcode" placeholder="e.g. ME21N — purchase order creation that triggers this logic" autocomplete="off" style="text-transform:uppercase" />
+      </div>
+
+      <div class="form-group">
+        <label for="analysisSystem">System</label>
+        <select id="analysisSystem">
+          <option value="" disabled selected>&mdash; Select system &mdash;</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="analysisQuestion">What do you want to analyse?</label>
+        <textarea id="analysisQuestion" class="modal-textarea" rows="3" placeholder="e.g. Summarise the purpose of this class, explain the main logic, list all database tables accessed..."></textarea>
+      </div>
+
+      <p class="error-msg" id="analysisError"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="analysisCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="analysisSubmitBtn">&#128202; Start Analysis</button>
+      </div>
+    </div>
+  </div>

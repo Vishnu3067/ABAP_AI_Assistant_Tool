@@ -767,7 +767,7 @@
       document.getElementById('namingConvView').classList.add('hidden');
       impactView.classList.remove('hidden');
 
-      navFeatureLabel.textContent = 'Impact Analysis (Where-used)';
+      navFeatureLabel.textContent = 'Impact Analysis';
       impactViewTitle.textContent = `Impact: ${data.artifact_name}`;
 
       // Meta pills — use green for zero (safe), orange for 1+ (has dependents)
