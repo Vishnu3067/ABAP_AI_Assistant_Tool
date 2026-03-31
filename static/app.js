@@ -1533,12 +1533,12 @@
     srcTag.textContent   = data.source_system;
     dstTag.textContent   = data.destination_system;
 
-    // Render diff tables
-    renderDiffTable(srcDiffTable, data.left_lines, true);
-    renderDiffTable(dstDiffTable, data.right_lines, false);
-
-    // Sync scroll between the two code blocks
+    // Re-wire scroll sync first (clones nodes, must happen before renderDiffTable)
     syncCodeBlockScroll();
+
+    // Render diff tables into the freshly cloned nodes
+    renderDiffTable(document.getElementById('srcDiffTable'), data.left_lines, true);
+    renderDiffTable(document.getElementById('dstDiffTable'), data.right_lines, false);
 
     // Render AI analysis
     aiAnalysisBody.innerHTML = renderMarkdown(data.ai_analysis);
