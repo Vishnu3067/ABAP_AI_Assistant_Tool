@@ -101,7 +101,7 @@ export function initReusable(cfg) {
         badge.innerHTML = `
           <div class="fetched-header" style="cursor:default">
             <span class="fetched-icon">&#129302;</span>
-            <span class="fetched-title">AI searched catalog on S59 &amp; fetched ${data.fetched_artifacts.length} artifact source(s) from D59</span>
+            <span class="fetched-title">AI searched catalog on S59 &amp; fetched ${data.fetched_artifacts.length} artifact source(s) from S59</span>
           </div>
           <div class="fetched-body" style="display:block">
             <table class="fetched-table">

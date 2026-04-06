@@ -3,9 +3,9 @@ from typing import List
 import requests
 from fastapi import APIRouter, HTTPException
 
-from core.config import SAP_URL_S59, SAP_URL_D59, MAX_FETCHED_CHARS
+from core.config import SAP_URL_S59, MAX_FETCHED_CHARS
 from core.models import ReusableArtifactsRequest
-from core.sap_client import get_session, fetch_source, fetch_odata_all_pages
+from core.sap_client import get_session, fetch_source, fetch_odata_all_pages, collect_dependent_sources
 from core.rag import retrieve_top_methods
 from core.ai_client import call_ai, truncate_source
 
@@ -63,7 +63,7 @@ async def reusable_artifacts(payload: ReusableArtifactsRequest):
             continue
         seen_names.add(m["name"])
         try:
-            code = fetch_source(session, SAP_URL_D59, m["type"], m["name"])
+            code = fetch_source(session, SAP_URL_S59, m["type"], m["name"])
             code = truncate_source(code, MAX_FETCHED_CHARS)
             artifact_sources.append({**m, "source": code, "status": "ok"})
         except requests.HTTPError as e:
@@ -77,6 +77,18 @@ async def reusable_artifacts(payload: ReusableArtifactsRequest):
         if art.get("source"):
             source_block += f"\n\n--- SOURCE: {art['type']} '{art['name']}' ---\n{art['source']}\n---"
 
+    # Fetch source for custom objects referenced inside the matched artifact
+    dep_block = ""
+    for art in artifact_sources:
+        if art.get("source"):
+            deps = collect_dependent_sources(art["source"], session, SAP_URL_S59)
+            if deps:
+                dep_block += deps
+    if dep_block:
+        source_block += "\n\n=== DEPENDENT OBJECTS (called internally by the matched artifact) ===" + dep_block
+
+    source_note = "(source code was not available — do NOT generate a Non-ADC Alternative; write a one-line note saying source could not be fetched)" if not source_block else ""
+
     prompt = f"""You are an expert SAP ABAP developer helping find a pre-approved reusable artifact.
 
 Developer's need: "{question}"
@@ -85,25 +97,35 @@ Relevant catalog entries (ranked by relevance):
 {rag_context}
 {source_block if source_block else ""}
 
-Respond in this EXACT short format. Keep the entire response under 250 words (excluding code).
+Respond in this EXACT format with all four sections. Keep the entire response under 400 words (excluding code).
 Do NOT use markdown pipe tables (no | col | format). Use bullet points for lists.
 
 ## Best Match
-- **Name:** <exact class or FM name>
+- **Name:** <exact class or FM name from the catalog>
 - **Type:** Class / Function Module
 - **Method / Entry Point:** <method or FM name>
 - **Purpose:** One sentence.
 - **Why it fits:** One sentence explaining how it solves the need.
 
-## Ready-to-Use Code
+## Ready-to-Use Code (ADC)
 ```abap
-\" Complete working snippet — copy and paste into your ABAP code
+" Complete working snippet using the reusable artifact above — for ADC project only
 ```
+
+## Non-ADC Alternative
+{source_note if source_note else '''Study the SOURCE CODE provided above for the matched artifact.
+Understand exactly what it does internally — every data declaration, every SELECT, every method call, every loop.
+Then rewrite that exact same logic using ONLY standard SAP ABAP classes and function modules (no /SHL/ or custom objects).
+Do NOT invent logic. Do NOT use constructs that are not in the source code above.
+If the source calls a nested helper method or dependent FM, inline its logic too.
+```abap
+" Derived from the actual source of the matched artifact — no custom objects, works in any ABAP project
+```'''}
 
 ## Notes
 - Key parameter, prerequisite, or exception to handle (max 3 bullet points)
 
-If no artifact matches, say so clearly in one sentence. Be direct and practical."""
+If no catalog artifact matches, say so in the Best Match section. Be direct and practical."""
 
     try:
         reply = call_ai([{"role": "user", "content": prompt}], temperature=0.3)

@@ -61,8 +61,6 @@ def retrieve_top_methods(json_classes: dict, json_fms: dict,
     - OData returns ONE ROW PER PARAMETER, so a method with 4 params = 4 rows.
       Splitting by row inflates multi-param methods; splitting by fixed chars
       mixes ~10 unrelated methods into one TF-IDF document. Both are wrong.
-    - The OData field has a TYPO: 'MethodNaame' (double a). Text-based approaches
-      rely on the formatted label 'MethodName:' and miss the actual value.
     - Method names like ADD_RECIPIENTS_WITH_EMAILID are never tokenised by
       stop-word-aware TF-IDF because underscores are not whitespace.
 
@@ -95,8 +93,7 @@ def retrieve_top_methods(json_classes: dict, json_fms: dict,
         if not isinstance(rec, dict):
             continue
         cname = rec.get("ClassName", "").strip()
-        # SAP OData typo: field is 'MethodNaame' (double a) — handle both spellings
-        mname = (rec.get("MethodNaame") or rec.get("MethodName") or "").strip()
+        mname = rec.get("MethodName", "").strip()
         if cname:
             class_groups[(cname, mname)].append(rec)
 

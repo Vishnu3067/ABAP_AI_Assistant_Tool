@@ -356,6 +356,73 @@ def collect_includes_source(
     return "".join(sections)
 
 
+def collect_dependent_sources(
+    source_code: str,
+    session: requests.Session,
+    sap_url: str,
+    char_budget: int = 40_000,
+) -> str:
+    """
+    Scan ABAP source_code for references to custom objects (classes, FMs, function
+    groups with namespace prefixes like /SHL/, /DS1/, Z, Y) and fetch their source.
+
+    Only project-specific / custom objects are fetched — standard SAP names are
+    skipped because the Non-ADC section needs to replace precisely these.
+
+    Returns a string of concatenated source blocks, or "" if nothing found.
+    """
+    import re
+
+    # Patterns that identify custom object names in ABAP source:
+    # - Namespace classes: /SHL/CL_..., /DS1/CL_..., etc.
+    # - Z/Y classes: ZCL_..., YCL_...
+    # - Namespace FMs/function groups: /SHL/FM_..., /DS1/R_..., etc.
+    # - Z/Y FMs: ZFM_..., ZF_..., YFM_...
+    custom_pattern = re.compile(
+        r'\b((?:/[A-Z0-9]+/)?(?:ZCL|YCL|ZIF|YIF)[A-Z0-9_]+|'
+        r'(?:/[A-Z0-9]+/)?(?:ZFM|YFM|ZF_|YF_)[A-Z0-9_]*|'
+        r'/[A-Z0-9]+/[A-Z][A-Z0-9_]+)\b',
+        re.IGNORECASE,
+    )
+
+    found_names = list(dict.fromkeys(  # preserve order, deduplicate
+        m.upper() for m in custom_pattern.findall(source_code)
+    ))
+
+    if not found_names:
+        return ""
+
+    sections: list[str] = []
+    total_chars = 0
+
+    for name in found_names:
+        if total_chars >= char_budget:
+            sections.append(f"\n--- DEPENDENCY BUDGET REACHED: remaining dependents skipped ---")
+            break
+
+        # Determine likely type from naming convention
+        upper = name.upper()
+        if "CL_" in upper:
+            obj_type = "Class"
+        elif "IF_" in upper:
+            obj_type = "Interface"
+        else:
+            obj_type = "Report/Program"
+
+        try:
+            code = fetch_source(session, sap_url, obj_type, name)
+            if not code or not code.strip():
+                continue
+            section = f"\n--- DEPENDENT {obj_type.upper()}: {name} ---\n{code}\n---"
+            sections.append(section)
+            total_chars += len(section)
+        except Exception:
+            # Object not found or not accessible — skip silently
+            pass
+
+    return "".join(sections)
+
+
 def fetch_reviewable_source(
     session: requests.Session,
     sap_url: str,
