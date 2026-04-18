@@ -94,3 +94,10 @@ class NamingConvRequest(BaseModel):
     question: str
     system: str   # "ADC" or "Nucleus"
 
+
+# ── TS Creation models ────────────────────────────────────────────────────────
+
+class TsCreationRegenerateRequest(BaseModel):
+    doc_id: str
+    feedback: str
+

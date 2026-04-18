@@ -11,3 +11,6 @@ numpy
 scikit-learn
 openpyxl
 pandas
+python-docx>=1.2.0
+docxtpl>=0.20.2
+lxml>=6.1.0

@@ -5,7 +5,7 @@
 
 const ALL_VIEW_IDS = [
   'compareView', 'reviewView', 'trView', 'tsView', 'chatView',
-  'reusableView', 'impactView', 'dardView', 'namingConvView',
+  'reusableView', 'impactView', 'dardView', 'namingConvView', 'tsCreationView',
 ];
 
 export function hideAllViews() {

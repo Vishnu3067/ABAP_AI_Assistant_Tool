@@ -11,8 +11,9 @@ load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env", override=True)
 # AI-DARD data files (Excel catalog + naming convention DOCX)
 # Bundled inside the project under data/ so the repo is fully self-contained
 _DATA_DIR = Path(__file__).parent.parent / "data"
-DARD_EXCEL_PATH = Path(os.environ.get("DARD_EXCEL_PATH", str(_DATA_DIR / "artefacts.xlsx")))
-DARD_DOCX_PATH  = Path(os.environ.get("DARD_DOCX_PATH",  str(_DATA_DIR / "S4HANA-Naming Convention Standards-v1.0 3.docx")))
+DARD_EXCEL_PATH  = Path(os.environ.get("DARD_EXCEL_PATH", str(_DATA_DIR / "artefacts.xlsx")))
+DARD_DOCX_PATH   = Path(os.environ.get("DARD_DOCX_PATH",  str(_DATA_DIR / "S4HANA-Naming Convention Standards-v1.0 3.docx")))
+TS_TEMPLATE_PATH = Path(os.environ.get("TS_TEMPLATE_PATH", str(_DATA_DIR / "TS_WRICEF ID_Description v1.0 - AITemplate 1.docx")))
 DARD_API_URL    = os.environ.get("DARD_API_URL", "https://sapash94.europe.shell.com:8694/sap/opu/odata/sap/ZSB_MAIN_DEPENDENT_V2/main")
 
 SAP_URL_D59 = os.environ.get("SAP_URL_D59", "").rstrip("/")

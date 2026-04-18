@@ -11,6 +11,7 @@ import { initReusable }        from './features/reusable.js';
 import { initImpact }          from './features/impact.js';
 import { initDard }            from './features/dard.js';
 import { initNamingConv }      from './features/naming_conv.js';
+import { initTsCreation }      from './features/ts_creation.js';
 
 const {
   validSystems,
@@ -57,6 +58,7 @@ initReusable(cfg);
 initImpact(cfg);
 initDard(cfg);           // uses cfg._renderDiffTable set by initRetrofit
 initNamingConv(cfg);
+initTsCreation(cfg);
 
 // ── Sidebar hover-only (no persistent active state needed) ─────────────────
 document.querySelectorAll('.sidebar-btn:not(.disabled)').forEach(btn => {
@@ -71,7 +73,7 @@ document.addEventListener('keydown', e => {
     'retrofitModal', 'reviewModal', 'trModal', 'tsModal',
     'analysisModal', 'reusableModal', 'impactModal',
     'dardSearchModal', 'dardResultsModal', 'dardGenerateModal',
-    'namingConvModal',
+    'namingConvModal', 'tsCreationModal', 'tsRegenModal',
   ].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el.classList.contains('hidden')) {

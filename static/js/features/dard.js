@@ -113,7 +113,7 @@ export function initDard(cfg) {
   function _updateFetchBtn() {
     const checked = dardCheckboxList.querySelectorAll('input[type=checkbox]:checked');
     dardFetchCodeBtn.disabled = checked.length === 0;
-    dardRetrofitBtn.disabled = true; // permanently disabled
+    dardRetrofitBtn.disabled = checked.length !== 2; // permanently disabled
   }
 
   dardCheckboxList.addEventListener('change', _updateFetchBtn);
@@ -202,7 +202,7 @@ export function initDard(cfg) {
     } finally {
       loadingOverlay.classList.add('hidden');
       dardFetchCodeBtn.disabled = false;
-      dardRetrofitBtn.disabled = true;
+      dardRetrofitBtn.disabled = false;
     }
   }
 

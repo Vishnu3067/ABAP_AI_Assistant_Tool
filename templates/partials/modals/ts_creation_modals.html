@@ -1,0 +1,56 @@
+  <!-- ===================== TS CREATION — UPLOAD FS MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="tsCreationModal">
+    <div class="modal">
+      <h2>&#128196; TS Creation Tool</h2>
+      <p class="modal-subtitle">
+        Upload your Functional Specification (.docx) and the AI will read it, understand
+        the requirements, and generate a complete Technical Specification document using
+        the standard TS template — filled with all the correct details.
+      </p>
+
+      <div class="form-group">
+        <label for="tsCreationFileInput">Functional Specification Document (.docx)</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+          <label class="btn btn-secondary" style="cursor:pointer;margin:0;padding:7px 16px;font-size:13px;">
+            &#128193; Choose File
+            <input type="file" id="tsCreationFileInput" accept=".docx"
+                   style="display:none" />
+          </label>
+          <span id="tsCreationFileName" style="font-size:12.5px;color:#555;font-style:italic;">
+            No file selected
+          </span>
+        </div>
+      </div>
+
+      <p class="error-msg" id="tsCreationError"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="tsCreationCancelBtn">Cancel</button>
+        <button class="btn btn-primary"   id="tsCreationSubmitBtn">&#9881; Generate TS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TS CREATION — REGENERATE MODAL ===================== -->
+  <div class="modal-backdrop hidden" id="tsRegenModal">
+    <div class="modal ts-regen-modal">
+      <h2>&#9851; Regenerate TS</h2>
+      <p class="modal-subtitle">
+        Describe what needs to be corrected or improved. The AI will update the TS
+        accordingly while keeping the correct sections intact.
+      </p>
+
+      <div class="form-group">
+        <label for="tsRegenFeedback">Your feedback / correction instructions</label>
+        <textarea id="tsRegenFeedback" class="modal-textarea" rows="6"
+          placeholder="e.g. The Solution Overview section is missing details about the email notification logic. Please expand it.&#10;&#10;e.g. The WRICEF ID should be WR-0042, not N/A.&#10;&#10;e.g. Section 4 describes the wrong class — please correct it based on the FS."></textarea>
+      </div>
+
+      <p class="error-msg" id="tsRegenError"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="tsRegenCancelBtn">Cancel</button>
+        <button class="btn btn-primary"   id="tsRegenSubmitBtn">&#9881; Update TS</button>
+      </div>
+    </div>
+  </div>

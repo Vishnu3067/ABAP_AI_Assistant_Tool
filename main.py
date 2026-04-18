@@ -2,7 +2,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from routes import home, tr_analysis, chat_analysis, ts_finalization, code_review, retrofit, reusable_artifacts, impact_analysis, dard, naming_conv
+from routes import home, tr_analysis, chat_analysis, ts_finalization, code_review, retrofit, reusable_artifacts, impact_analysis, dard, naming_conv, ts_creation
 
 app = FastAPI(title="ABAP AI Assistant Tool")
 
@@ -22,6 +22,7 @@ app.include_router(reusable_artifacts.router)
 app.include_router(impact_analysis.router)
 app.include_router(dard.router)
 app.include_router(naming_conv.router)
+app.include_router(ts_creation.router)
 
 if __name__ == "__main__":
     import uvicorn

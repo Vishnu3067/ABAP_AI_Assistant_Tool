@@ -17,19 +17,30 @@ def truncate_source(code: str, max_chars: int) -> str:
 
 
 def call_ai(messages: list, temperature: float = 1.0, top_p: float = 1.0, max_tokens: int = 4096) -> str:
-    completion = openai_client.chat.completions.create(
-        model=OPENAI_MODEL,
-        messages=messages,
-        temperature=temperature,
-        top_p=top_p,
-        max_tokens=max_tokens,
-        stream=True,
-    )
-    parts: list[str] = []
-    for chunk in completion:
-        if not getattr(chunk, "choices", None):
-            continue
-        content = getattr(chunk.choices[0].delta, "content", None)
-        if content:
-            parts.append(content)
-    return "".join(parts)
+    last_exc = None
+    for attempt in range(3):
+        try:
+            completion = openai_client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=messages,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_tokens,
+                stream=True,
+            )
+            parts: list[str] = []
+            for chunk in completion:
+                if not getattr(chunk, "choices", None):
+                    continue
+                content = getattr(chunk.choices[0].delta, "content", None)
+                if content:
+                    parts.append(content)
+            return "".join(parts)
+        except Exception as exc:
+            last_exc = exc
+            # Only retry on transient network/stream errors
+            msg = str(exc).lower()
+            if any(kw in msg for kw in ("incomplete", "chunked", "connection", "timeout", "reset", "eof")):
+                continue
+            raise
+    raise last_exc
